@@ -5,7 +5,11 @@ import { getAuth } from "firebase/auth";
 // 웹 클라이언트 설정값은 공개용이다(보안은 Auth · App Check · 서버 검증이 맡는다).
 const app = initializeApp({
   apiKey: "AIzaSyD6Ni_9F7n0lrA600Ha0YrIUMZ36O_X2cg",
-  authDomain: "opicmobile-45cd5.firebaseapp.com",
+  // 운영에선 로그인 경로(/__/auth)를 우리 도메인으로 프록시(vercel.json)해서
+  // Google 로그인 화면에 firebaseapp.com 대신 우리 주소가 보이게 한다.
+  // 미리보기 배포 주소는 OAuth 리디렉션 URI에 없으므로 운영 도메인에서만 프록시를 쓴다.
+  authDomain:
+    window.location.host === "dailyopic.vercel.app" ? "dailyopic.vercel.app" : "opicmobile-45cd5.firebaseapp.com",
   projectId: "opicmobile-45cd5",
   storageBucket: "opicmobile-45cd5.firebasestorage.app",
   messagingSenderId: "992368032252",
