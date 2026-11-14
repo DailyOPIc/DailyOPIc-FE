@@ -78,10 +78,17 @@ export const PLANS: Plan[] = [
   },
 ];
 
-export type Review = { title: string; body: string; rating: number; author: string };
+export type Review = {
+  body: string;
+  author: string; // 익명 표기(예: "대학생 K")
+  source: "App Store" | "베타 테스터";
+  title?: string;
+  rating?: number; // 실제로 받은 별점만. 없으면 별을 그리지 않는다.
+};
 
-// 실제 App Store 리뷰만 넣는다. 지어낸 후기는 표시광고법 위반이다.
+// 실제로 받은 후기만 넣는다(지어낸 후기는 표시광고법 위반).
+// "베타 테스터"는 운영자 지인에게 직접 들은 피드백 — 관계 표시가 필요해 출처로 남긴다.
 // 3개 이상이 되면 랜딩 후기 섹션이 자동으로 가로 무한 스크롤로 바뀐다.
 export const REVIEWS: Review[] = [
-  { title: "학원 다니려다가 그냥 이거함", body: "괜찮네요 학원비 잘 아낍니다", rating: 5, author: "사용자1926" },
+  { title: "학원 다니려다가 그냥 이거함", body: "괜찮네요 학원비 잘 아낍니다", rating: 5, author: "사용자1926", source: "App Store" },
 ];

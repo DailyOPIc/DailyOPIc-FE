@@ -1182,3 +1182,9 @@ h3 {
     min-width: 140px;
   }
 }
+
+.review .review-quote {
+  color: var(--ink);
+  font-weight: 600;
+  font-size: 17px;
+}

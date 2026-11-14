@@ -21,13 +21,17 @@ const KEYWORDS = [
 function ReviewCard({ review }: { review: Review }) {
   return (
     <article className="review">
-      <p className="stars" aria-label={`별점 ${review.rating}점`}>
-        {"★".repeat(review.rating)}
-        <span className="stars-off">{"★".repeat(5 - review.rating)}</span>
+      {review.rating && (
+        <p className="stars" aria-label={`별점 ${review.rating}점`}>
+          {"★".repeat(review.rating)}
+          <span className="stars-off">{"★".repeat(5 - review.rating)}</span>
+        </p>
+      )}
+      {review.title && <h3>{review.title}</h3>}
+      <p className={review.title ? undefined : "review-quote"}>{review.body}</p>
+      <p className="review-meta">
+        {review.author} · {review.source}
       </p>
-      <h3>{review.title}</h3>
-      <p>{review.body}</p>
-      <p className="review-meta">{review.author} · App Store</p>
     </article>
   );
 }
@@ -288,18 +292,18 @@ export function Home() {
       <section className="reviews">
         <div className="container" data-reveal>
           <p className="eyebrow">사용자 후기</p>
-          <h2>App Store에 남겨주신 이야기</h2>
+          <h2>먼저 써본 분들의 이야기</h2>
         </div>
         {REVIEWS.length >= 3 ? (
           <Marquee label="사용자 후기" speed={60}>
             {REVIEWS.map((r) => (
-              <ReviewCard key={r.title} review={r} />
+              <ReviewCard key={r.body} review={r} />
             ))}
           </Marquee>
         ) : (
           <div className="container review-list" data-reveal>
             {REVIEWS.map((r) => (
-              <ReviewCard key={r.title} review={r} />
+              <ReviewCard key={r.body} review={r} />
             ))}
           </div>
         )}
