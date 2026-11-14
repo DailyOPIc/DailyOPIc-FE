@@ -22,14 +22,18 @@ export function Marquee({
   label,
   speed = 40,
   reverse,
+  className = "",
 }: {
   children: ReactNode;
   label: string;
   speed?: number;
   reverse?: boolean;
+  className?: string;
 }) {
   return (
-    <div className={`marquee${reverse ? " marquee-reverse" : ""}`} role="region" aria-label={label} style={{ "--marquee-duration": `${speed}s` } as CSSProperties}>
+    <div className={`marquee${reverse ? " marquee-reverse" : ""} ${className}`} role={label ? "region" : undefined}
+      aria-label={label || undefined}
+      aria-hidden={label ? undefined : true} style={{ "--marquee-duration": `${speed}s` } as CSSProperties}>
       <div className="marquee-track">
         <div className="marquee-group">{children}</div>
         <div className="marquee-group" aria-hidden="true">

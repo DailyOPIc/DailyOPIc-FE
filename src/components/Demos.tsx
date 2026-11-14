@@ -3,9 +3,9 @@ import { useEffect, useRef, useState, type CSSProperties } from "react";
 const i = (n: number) => ({ "--i": n }) as CSSProperties;
 
 /** 로고가 선으로 그려지며 완성되고, 마이크에서 음파가 퍼진다. */
-export function LogoBuild() {
+export function LogoBuild({ className = "" }: { className?: string }) {
   return (
-    <div className="logo-build" aria-hidden="true">
+    <span className={`logo-build ${className}`} aria-hidden="true">
       <span className="wave" />
       <span className="wave" style={i(1)} />
       <span className="wave" style={i(2)} />
@@ -21,12 +21,18 @@ export function LogoBuild() {
           strokeWidth={64}
         />
       </svg>
-      <span className="float-chip chip-a">
-        <b>IH</b> 예상 등급
-      </span>
-      <span className="float-chip chip-b">🔊 질문 듣기</span>
-      <span className="float-chip chip-c">✓ 피드백 3개</span>
-    </div>
+    </span>
+  );
+}
+
+/** 말하는 중임을 보여주는 이퀄라이저 알약 */
+export function VoicePill() {
+  return (
+    <span className="voice-pill" aria-hidden="true">
+      {Array.from({ length: 14 }, (_, n) => (
+        <span key={n} style={i(n)} />
+      ))}
+    </span>
   );
 }
 

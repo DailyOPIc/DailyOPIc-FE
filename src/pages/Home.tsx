@@ -1,7 +1,7 @@
 import type { CSSProperties, ReactNode } from "react";
 import { Link } from "react-router-dom";
-import { AppStoreButton, Logo, Marquee } from "../components/Bits";
-import { AnalysisDemo, CountUp, LogoBuild, QuestionDemo, RoutineDemo } from "../components/Demos";
+import { AppStoreButton, Marquee } from "../components/Bits";
+import { AnalysisDemo, CountUp, LogoBuild, QuestionDemo, RoutineDemo, VoicePill } from "../components/Demos";
 import { REVIEWS, type Review } from "../site";
 
 const GRADES = ["NL", "NM", "NH", "IL", "IM1", "IM2", "IM3", "IH", "AL"];
@@ -103,49 +103,60 @@ export function Home() {
   return (
     <>
       <section className="hero">
-        <div className="container hero-inner">
-          <div className="hero-copy">
-            <p className="eyebrow">AI OPIc 스피킹 루틴</p>
-            <h1>
-              매일 말하며
-              <br />
-              준비하는 <span className="accent">OPIc</span>
-            </h1>
-            <p className="lead">
-              앱을 열면 오늘의 문제가 기다리고 있어요. 직접 말하고 나면 AI가 예상 등급과 고칠 점을 바로
-              알려줘요.
-            </p>
-            <div className="hero-actions">
-              <AppStoreButton />
-              <Link to="/membership" className="button button-ghost">
-                요금제 보기
-              </Link>
-            </div>
+        <Marquee label="" speed={60} className="hero-backdrop">
+          {["SPEAK", "EVERY", "DAY", "OPIc"].map((w) => (
+            <span key={w}>{w}</span>
+          ))}
+        </Marquee>
+        <h1 className="hero-title">
+          <span className="hl hl-1">
+            매일 <VoicePill /> 말하며
+          </span>
+          <span className="hl hl-2">
+            <LogoBuild className="logo-inline" />
+            준비하는 <span className="accent">OPIc</span>
+          </span>
+          <span className="float-chip chip-a" aria-hidden="true">
+            <b>IH</b> 예상 등급
+          </span>
+          <span className="float-chip chip-b" aria-hidden="true">
+            🔊 질문 듣기
+          </span>
+        </h1>
+
+        <div className="wide hero-foot">
+          <p className="lead">
+            앱을 열면 오늘의 문제가 기다리고 있어요. 직접 말하고 나면 AI가 예상 등급과 고칠 점을 바로 알려줘요.
+          </p>
+          <div className="hero-actions">
+            <AppStoreButton />
+            <Link to="/membership" className="button button-ghost">
+              요금제 보기
+            </Link>
           </div>
-          <LogoBuild />
         </div>
 
-        <div className="container stats">
-          <div className="stat" data-reveal>
+        <div className="stats">
+          <div className="stat">
             <span className="stat-label">누적 다운로드</span>
             <strong>
               <CountUp to={2600} suffix="+" />
             </strong>
           </div>
-          <div className="stat" data-reveal style={{ "--reveal-delay": "100ms" } as CSSProperties}>
+          <div className="stat">
             <span className="stat-label">매일 받는 실전 문항</span>
             <strong>
               <CountUp to={14} suffix="문항" />
             </strong>
           </div>
-          <div className="stat" data-reveal style={{ "--reveal-delay": "200ms" } as CSSProperties}>
+          <div className="stat">
             <span className="stat-label">AI가 분석하는 영역</span>
             <strong>
               <CountUp to={5} suffix="개 영역" />
             </strong>
           </div>
         </div>
-        <p className="container stats-note">누적 다운로드: App Store Connect 첫 다운로드 기준(2026.11.12)</p>
+        <p className="wide stats-note">누적 다운로드: App Store Connect 첫 다운로드 기준(2026.11.12)</p>
       </section>
 
       <section className="wordmark" aria-label="DailyOPIc">
@@ -300,11 +311,30 @@ export function Home() {
         <p className="container review-note">개인의 경험이며, 결과는 사람마다 다를 수 있어요.</p>
       </section>
 
-      <section className="cta">
-        <div className="container cta-inner" data-reveal>
-          <Logo size={72} />
-          <h2>오늘의 문제, 지금 말해보세요</h2>
-          <p>무료로 시작하고, 필요할 때만 업그레이드하세요.</p>
+      <section className="finale" data-reveal>
+        <Marquee label="" speed={28} className="finale-line">
+          {["오늘의 문제, 지금 말해보세요", "매일 10분 스피킹 루틴"].map((t) => (
+            <span key={t}>
+              {t}
+              <i aria-hidden="true">✦</i>
+            </span>
+          ))}
+        </Marquee>
+        <Marquee label="" speed={34} reverse className="finale-line finale-outline">
+          {["SPEAK EVERY DAY", "DailyOPIc", "IL → IM → IH → AL"].map((t) => (
+            <span key={t}>
+              {t}
+              <i aria-hidden="true">✦</i>
+            </span>
+          ))}
+        </Marquee>
+        <div className="wide finale-foot">
+          <LogoBuild className="logo-finale" />
+          <p>
+            무료로 시작하고,
+            <br />
+            필요할 때만 업그레이드하세요.
+          </p>
           <AppStoreButton label="무료로 시작하기" />
         </div>
       </section>
