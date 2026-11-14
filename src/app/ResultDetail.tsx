@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import { Icon } from "../assets/Icon";
 import type { Evaluation } from "../lib/api";
 
 const AREA: [keyof Evaluation["scores"], string][] = [
@@ -35,7 +36,7 @@ export function ResultDetail({ evaluation: e, plan }: { evaluation: Evaluation; 
       </section>
 
       <section className="detail-card good">
-        <h3>👍 잘한 점</h3>
+        <h3><Icon name="thumb" size={22} /> 잘한 점</h3>
         <ul>
           {e.strengths.map((s) => (
             <li key={s}>{s}</li>
@@ -43,7 +44,7 @@ export function ResultDetail({ evaluation: e, plan }: { evaluation: Evaluation; 
         </ul>
       </section>
       <section className="detail-card fix">
-        <h3>🎯 감점 요인 · 개선할 점</h3>
+        <h3><Icon name="target" size={22} /> 감점 요인 · 개선할 점</h3>
         <ul>
           {e.improvements.map((s) => (
             <li key={s}>{s}</li>
@@ -59,19 +60,19 @@ export function ResultDetail({ evaluation: e, plan }: { evaluation: Evaluation; 
       )}
       {e.correctedAnswer && (
         <section className="detail-card">
-          <h3>✏️ 교정 답안</h3>
+          <h3><Icon name="pencil" size={22} /> 교정 답안</h3>
           <p className="answer-en">{e.correctedAnswer}</p>
         </section>
       )}
       {e.sampleAnswer && (
         <section className="detail-card">
-          <h3>⭐ 모범 답안</h3>
+          <h3><Icon name="star" size={22} /> 모범 답안</h3>
           <p className="answer-en">{e.sampleAnswer}</p>
         </section>
       )}
       {plan === "free" && !e.correctedAnswer && (
         <section className="detail-card locked">
-          <h3>🔒 교정 답안 · 모범 답안 · 목표 등급까지</h3>
+          <h3><Icon name="lock" size={22} /> 교정 답안 · 모범 답안 · 목표 등급까지</h3>
           <p>베이직 플랜부터 결과 전체를 볼 수 있어요.</p>
           <Link to="/membership" className="btn btn-secondary">
             요금제 보기

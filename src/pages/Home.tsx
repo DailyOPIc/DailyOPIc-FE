@@ -1,7 +1,10 @@
 import type { CSSProperties, ReactNode } from "react";
 import { Link } from "react-router-dom";
 import { AppStoreButton, Marquee } from "../components/Bits";
-import { AnalysisDemo, CountUp, LogoBuild, QuestionDemo, RoutineDemo, VoicePill } from "../components/Demos";
+import { AnalysisDemo, BoardDemo, CountUp, GamesDemo, LogoBuild, QuestionDemo, VersusDemo, VoicePill } from "../components/Demos";
+import { Mascot } from "../assets/Mascot";
+import { Icon, type IconName } from "../assets/Icon";
+import { FREE_DAILY } from "../lib/limits";
 import { REVIEWS, type Review } from "../site";
 
 const GRADES = ["NL", "NM", "NH", "IL", "IM1", "IM2", "IM3", "IH", "AL"];
@@ -20,11 +23,11 @@ const KEYWORDS = [
 ];
 
 // 앱 배경 설문의 실제 주제(BackgroundProfile.swift)
-const TOPICS = [
-  ["🎬", "영화 보기"], ["🎧", "음악 감상"], ["☕", "카페 가기"], ["🛍️", "쇼핑"], ["📚", "독서"],
-  ["🍳", "요리"], ["🎮", "게임"], ["📷", "사진 찍기"], ["🎸", "악기 연주"], ["🐶", "반려동물"],
-  ["🏃", "조깅"], ["🏋️", "헬스"], ["🏊", "수영"], ["🚴", "자전거"], ["⚽", "축구"],
-  ["🧘", "요가"], ["⛰️", "등산"], ["🏖️", "바다 여행"], ["🏕️", "캠핑"], ["✈️", "해외여행"],
+const TOPICS: [IconName, string][] = [
+  ["star", "영화 보기"], ["headphones", "음악 감상"], ["chat", "카페 가기"], ["gem", "쇼핑"], ["book", "독서"],
+  ["flame", "요리"], ["keyboard", "게임"], ["sparkle", "사진 찍기"], ["soundOn", "악기 연주"], ["heart", "반려동물"],
+  ["timer", "조깅"], ["bolt", "헬스"], ["target", "수영"], ["rocket", "자전거"], ["trophy", "축구"],
+  ["hand", "요가"], ["compare", "등산"], ["phone", "바다 여행"], ["chest", "캠핑"], ["clipboard", "해외여행"],
 ];
 
 // OPIc 유형의 질문 예시. 첫 문장은 실제 앱 화면에 나온 질문이다.
@@ -111,6 +114,9 @@ export function Home() {
         <h1 className="hero-title">
           <span className="hl hl-1">
             매일 <VoicePill /> 말하며
+            <span className="hero-mascot" aria-hidden="true">
+              <Mascot mood="cheer" size={140} />
+            </span>
           </span>
           <span className="hl hl-2">
             <LogoBuild className="logo-inline" />
@@ -120,19 +126,22 @@ export function Home() {
             <b>IH</b> 예상 등급
           </span>
           <span className="float-chip chip-b" aria-hidden="true">
-            🔊 질문 듣기
+            <Icon name="soundOn" size={18} /> 질문 듣기
           </span>
         </h1>
 
         <div className="wide hero-foot">
           <p className="lead">
-            앱을 열면 오늘의 문제가 기다리고 있어요. 직접 말하고 나면 AI가 예상 등급과 고칠 점을 바로 알려줘요.
+            매일 새 문제에 직접 말하고, 바로 피드백 받고, 게임처럼 별과 경험치를 모아요. 친구와 기록 대결까지, 웹에서 무료로 시작해요.
           </p>
-          <div className="hero-actions">
-            <Link to="/study" className="button button-primary">
-              웹에서 바로 시작
+          <div className="hero-cta">
+            <Link to="/study" className="chunky chunky-primary">
+              무료로 시작하기
             </Link>
-            <AppStoreButton />
+            <Link to="/login" className="chunky chunky-ghost">
+              이미 계정이 있어요
+            </Link>
+            <AppStoreButton label="iPhone 앱" />
           </div>
         </div>
 
@@ -206,7 +215,57 @@ export function Home() {
       />
 
       <Feature
-        eyebrow="03 · 실전 모의고사"
+        eyebrow="03 · 게임처럼"
+        title="한 문항씩, 별과 경험치를 모아요"
+        points={[
+          {
+            title: "학습 판 · 보물상자 · 연속 기록",
+            body: "오늘의 세트를 판 위에서 한 칸씩 채워요. 5문항마다 보물상자, 매일 연속 학습 불꽃이 커져요.",
+          },
+          {
+            title: "말하면 바로 별 3개 체크",
+            body: "단어 수 · 속도 · 연결어를 바로 확인하는 간단 체크는 무료예요. 정밀 진단만 토큰을 써요.",
+          },
+        ]}
+        media={<BoardDemo />}
+      />
+
+      <Feature
+        reverse
+        eyebrow="04 · 단어 게임 7종"
+        title="답변에 바로 쓰는 표현을 놀이로"
+        points={[
+          {
+            title: "타자 · 뜻 맞추기 · 문장 조립 · 받아쓰기",
+            body: "To be honest, On top of that 같은 OPIc 필러 54개를 7가지 게임으로 익혀요.",
+          },
+          {
+            title: "PC는 타자로, 휴대폰은 탭과 키보드로",
+            body: "한컴타자처럼 따라 치고, 60초 스피드 퀴즈로 순발력도 키워요.",
+          },
+        ]}
+        media={<GamesDemo />}
+      />
+
+      <Feature
+        eyebrow="05 · 기록 대결"
+        title="같은 문제로 친구와 한판"
+        points={[
+          {
+            title: "도전장 링크 하나로",
+            body: "결과 화면에서 링크를 보내면 친구가 로그인하고 똑같은 문제로 도전해요. 점수 비교는 바로!",
+          },
+          {
+            title: "인스타 스토리로 자랑하기",
+            body: "결과 카드를 스토리 이미지로 만들어 올려요. 오늘의 챌린지는 모두가 같은 문제예요.",
+          },
+        ]}
+        media={<VersusDemo />}
+      />
+
+      <Feature
+        reverse
+        eyebrow="06 · 실전 모의고사 · iPhone 앱"
         title="시험 전엔 실전과 같은 흐름으로"
         points={[
           {
@@ -233,22 +292,49 @@ export function Home() {
         }
       />
 
-      <Feature
-        reverse
-        eyebrow="04 · 매일 루틴"
-        title="플래너와 단어장으로 꾸준하게"
-        points={[
-          {
-            title: "시험일까지 거꾸로 짜는 플래너",
-            body: "연속 학습 기록과 시험 D-day로 오늘 할 분량이 자연스럽게 정해져요.",
-          },
-          {
-            title: "오늘의 단어 20개",
-            body: "답변에 바로 쓸 단어 · 표현 · 패턴을 발음과 함께 익혀요.",
-          },
-        ]}
-        media={<RoutineDemo />}
-      />
+      <section className="free-plan">
+        <div className="wide free-inner">
+          <div className="free-head" data-reveal>
+            <p className="eyebrow">무료로 이만큼, 매일 새로</p>
+            <h2>
+              돈 없이도 <span className="accent">매일</span> 할 게 있어요
+            </h2>
+            <p className="lead">문제와 무료 횟수는 매일 자정(한국 시간)에 새로 채워져요.</p>
+          </div>
+          <div className="free-cards">
+            <div className="free-card" data-reveal>
+              <Icon name="mic" size={44} />
+              <strong>언제나 무료</strong>
+              <ul>
+                <li>오늘의 세트 Q2~Q15 말하기 연습</li>
+                <li>말하자마자 별 3개 간단 체크</li>
+                <li>친구가 보낸 도전장 대결</li>
+              </ul>
+            </div>
+            <div className="free-card" data-reveal style={{ "--reveal-delay": "100ms" } as CSSProperties}>
+              <Icon name="dice" size={44} />
+              <strong>매일 무료</strong>
+              <ul>
+                <li>랜덤 스피킹 하루 {FREE_DAILY.speak}문제</li>
+                <li>단어 게임 하루 {FREE_DAILY.games}판</li>
+                <li>AI 정밀 분석 데일리 토큰 1개</li>
+              </ul>
+            </div>
+            <div className="free-card plus" data-reveal style={{ "--reveal-delay": "200ms" } as CSSProperties}>
+              <Icon name="gem" size={44} />
+              <strong>베이직부터</strong>
+              <ul>
+                <li>랜덤 스피킹 · 단어 게임 무제한</li>
+                <li>AI 분석 토큰 매일 3~20개</li>
+                <li>교정 · 모범 답안까지 결과 전체</li>
+              </ul>
+              <Link to="/membership" className="text-link">
+                요금제 보기 →
+              </Link>
+            </div>
+          </div>
+        </div>
+      </section>
 
       <section className="practice-wall">
         <div className="container section-head" data-reveal>
@@ -260,7 +346,7 @@ export function Home() {
           <Marquee label="설문 주제" speed={50}>
             {TOPICS.map(([icon, label]) => (
               <span key={label} className="tile tile-topic">
-                <span aria-hidden="true">{icon}</span>
+                <Icon name={icon} size={26} />
                 {label}
               </span>
             ))}

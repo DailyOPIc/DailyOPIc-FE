@@ -1,4 +1,6 @@
 import { useEffect, useRef, useState, type CSSProperties } from "react";
+import { Icon, type IconName } from "../assets/Icon";
+import { Mascot } from "../assets/Mascot";
 
 const i = (n: number) => ({ "--i": n }) as CSSProperties;
 
@@ -152,45 +154,114 @@ export function AnalysisDemo() {
   );
 }
 
-/** 04 루틴: 달력에 연속 학습이 채워지고, 단어 카드가 뒤집힌다. */
-export function RoutineDemo() {
-  const filled = [3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
+/* ───────── 랜딩 v4 장면: 게임 · 단어 게임 · 기록 대결 ───────── */
+
+const BOARD_STEPS: { icon: IconName; done?: "ai" | "pr" }[] = [
+  { icon: "mic", done: "ai" },
+  { icon: "mic", done: "pr" },
+  { icon: "dice", done: "pr" },
+  { icon: "phone", done: "ai" },
+  { icon: "compare", done: "pr" },
+  { icon: "rocket" },
+];
+
+/** 학습 판이 하나씩 채워지고 보물상자가 열린다 */
+export function BoardDemo() {
   return (
-    <div className="demo demo-routine" data-reveal aria-hidden="true">
-      <div className="cal">
-        <div className="cal-head">
-          <span>🔥 연속 학습</span>
-          <b>D-16</b>
+    <div className="demo demo-board" data-reveal aria-hidden="true">
+      <div className="db-head">
+        <span className="db-chip flame">
+          <Icon name="flame" size={22} /> 12일 연속
+        </span>
+        <span className="db-chip bolt">
+          <Icon name="bolt" size={22} /> <b className="db-xp">+15 XP</b>
+        </span>
+      </div>
+      <div className="db-board">
+        {BOARD_STEPS.map((s, n) => (
+          <span key={n} className={`db-node${s.done ? ` ${s.done}` : " next"}`} style={i(n)}>
+            {s.done ? <Icon name="check" size={26} /> : <Icon name={s.icon} size={26} />}
+          </span>
+        ))}
+        <span className="db-chest" style={i(BOARD_STEPS.length)}>
+          <Icon name="chest" size={40} />
+          <i className="db-burst" />
+        </span>
+      </div>
+      <div className="db-foot">
+        <Mascot mood="happy" size={64} />
+        <p>5문항마다 보물상자! 오늘의 목표 달성</p>
+      </div>
+    </div>
+  );
+}
+
+const GAME_ICONS: IconName[] = ["timer", "keyboard", "book", "pencil", "target", "headphones", "sparkle"];
+const TYPED = "To be honest,";
+
+/** 게임 아이콘이 통통 나오고, 표현이 한 글자씩 쳐진다 */
+export function GamesDemo() {
+  return (
+    <div className="demo demo-games" data-reveal aria-hidden="true">
+      <div className="dg-icons">
+        {GAME_ICONS.map((g, n) => (
+          <span key={g} style={i(n)}>
+            <Icon name={g} size={34} />
+          </span>
+        ))}
+      </div>
+      <div className="dg-type">
+        {TYPED.split("").map((ch, n) => (
+          <span key={n} style={i(n)}>
+            {ch}
+          </span>
+        ))}
+      </div>
+      <div className="dg-meaning">솔직히 말하면,</div>
+      <div className="dg-stats">
+        <span>
+          <b>312</b>타/분
+        </span>
+        <span className="combo">7 콤보</span>
+        <span>
+          <b>100</b>%
+        </span>
+      </div>
+    </div>
+  );
+}
+
+/** 같은 문제로 대결: 점수가 올라가고 이긴 쪽에 왕관 */
+export function VersusDemo() {
+  return (
+    <div className="demo demo-versus" data-reveal aria-hidden="true">
+      <div className="dv-row">
+        <div className="dv-player me">
+          <Mascot mood="happy" size={70} />
+          <small>나</small>
+          <b>
+            <CountUp to={1180} />
+          </b>
+          <span className="dv-crown">
+            <Icon name="trophy" size={34} />
+          </span>
         </div>
-        <div className="cal-grid">
-          {Array.from({ length: 21 }, (_, n) => {
-            const order = filled.indexOf(n);
-            return (
-              <span
-                key={n}
-                className={order >= 0 ? "on" : n === 13 ? "today" : undefined}
-                style={order >= 0 ? i(order) : undefined}
-              >
-                {n + 1}
-              </span>
-            );
-          })}
+        <span className="dv-vs">VS</span>
+        <div className="dv-player">
+          <Mascot mood="sad" size={70} />
+          <small>친구</small>
+          <b>
+            <CountUp to={1080} />
+          </b>
         </div>
       </div>
-      <div className="flip">
-        <div className="flip-inner">
-          <div className="flip-face">
-            <small>오늘의 단어 7/20</small>
-            <b>strict</b>
-            <span>🔊 발음 듣기</span>
-          </div>
-          <div className="flip-face flip-back">
-            <small>뜻</small>
-            <b>엄격한</b>
-            <span>My teacher was strict but fair.</span>
-          </div>
-        </div>
+      <div className="dv-share">
+        <span className="dv-bubble">
+          <Icon name="chat" size={22} /> 도전장 링크
+        </span>
+        <span className="dv-bubble insta">스토리 이미지</span>
       </div>
+      <p className="dv-note">같은 문제 · 같은 순서로 공정하게</p>
     </div>
   );
 }

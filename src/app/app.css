@@ -3462,3 +3462,8 @@
   font-size: 0;
   line-height: 0;
 }
+.detail-card h3 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
