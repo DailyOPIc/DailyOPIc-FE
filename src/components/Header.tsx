@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Logo } from "./Bits";
 import { Link, NavLink } from "react-router-dom";
+import { signOut, useAuth } from "../lib/auth";
 
 const NAV = [
   { to: "/membership", label: "요금제" },
@@ -9,6 +10,7 @@ const NAV = [
 
 export function Header() {
   const [open, setOpen] = useState(false);
+  const { user } = useAuth();
   return (
     <header className="header">
       <div className="container header-inner">
@@ -32,10 +34,24 @@ export function Header() {
               {item.label}
             </NavLink>
           ))}
-          {/* 웹 로그인은 다음 단계(계정 연동)에서 연결한다. */}
-          <button className="button button-soft nav-login" disabled title="웹 로그인은 곧 열려요">
-            로그인
-          </button>
+          <NavLink to="/study" onClick={() => setOpen(false)}>
+            학습하기
+          </NavLink>
+          {user ? (
+            <button
+              className="button button-soft nav-login"
+              onClick={() => {
+                setOpen(false);
+                void signOut();
+              }}
+            >
+              로그아웃
+            </button>
+          ) : (
+            <Link to="/login" className="button button-soft nav-login" onClick={() => setOpen(false)}>
+              로그인
+            </Link>
+          )}
         </nav>
       </div>
     </header>

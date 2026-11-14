@@ -8,6 +8,9 @@ import { Membership } from "./pages/Membership";
 import { Help } from "./pages/Help";
 import { Privacy } from "./pages/Privacy";
 import { NotFound } from "./pages/NotFound";
+import { Login } from "./pages/Login";
+import { Study } from "./pages/Study";
+import { AuthProvider } from "./lib/auth";
 import "./styles.css";
 
 function ScrollToTop() {
@@ -40,6 +43,7 @@ function RevealOnScroll() {
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
+    <AuthProvider>
     <BrowserRouter>
       <ScrollToTop />
       <RevealOnScroll />
@@ -50,10 +54,13 @@ createRoot(document.getElementById("root")!).render(
           <Route path="/membership" element={<Membership />} />
           <Route path="/help" element={<Help />} />
           <Route path="/privacy" element={<Privacy />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/study" element={<Study />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </main>
       <Footer />
     </BrowserRouter>
+    </AuthProvider>
   </StrictMode>,
 );

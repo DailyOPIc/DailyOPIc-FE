@@ -129,10 +129,10 @@ export function Home() {
             앱을 열면 오늘의 문제가 기다리고 있어요. 직접 말하고 나면 AI가 예상 등급과 고칠 점을 바로 알려줘요.
           </p>
           <div className="hero-actions">
-            <AppStoreButton />
-            <Link to="/membership" className="button button-ghost">
-              요금제 보기
+            <Link to="/study" className="button button-primary">
+              웹에서 바로 시작
             </Link>
+            <AppStoreButton />
           </div>
         </div>
 
@@ -335,7 +335,12 @@ export function Home() {
             <br />
             필요할 때만 업그레이드하세요.
           </p>
-          <AppStoreButton label="무료로 시작하기" />
+          <div className="finale-actions">
+            <Link to="/study" className="button button-primary">
+              웹에서 무료로 시작
+            </Link>
+            <AppStoreButton label="App Store" />
+          </div>
         </div>
       </section>
     </>
