@@ -8,7 +8,7 @@
   --on-primary: #ffffff;
   --success-soft: #ecfdf5;
   --bg: #ffffff;
-  --surface: #f6f5fb;
+  --surface: #f7f8fc;
   --line: #e7e5f0;
   --shadow: 0 24px 60px -24px rgba(75, 36, 255, 0.28);
   --radius-lg: 28px;
@@ -16,24 +16,9 @@
   --radius-sm: 12px;
   --font: "Pretendard Variable", Pretendard, -apple-system, BlinkMacSystemFont, system-ui, "Apple SD Gothic Neo",
     "Noto Sans KR", sans-serif;
-  color-scheme: light dark;
+  color-scheme: light;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --primary: #967aff;
-    --primary-soft: #262048;
-    --primary-mid: #7864d2;
-    --ink: #f0f2f8;
-    --ink-2: #a0a6b2;
-    --on-primary: #111827;
-    --success-soft: #18342b;
-    --bg: #0d0d14;
-    --surface: #17161f;
-    --line: #2a2836;
-    --shadow: 0 24px 60px -24px rgba(0, 0, 0, 0.7);
-  }
-}
 
 *,
 *::before,
@@ -460,11 +445,6 @@ h3 {
   box-shadow: var(--shadow);
 }
 
-@media (prefers-color-scheme: dark) {
-  .grade-card {
-    background: #3a1fd1;
-  }
-}
 
 .grade-card-title {
   margin: 0;
@@ -1109,5 +1089,96 @@ h3 {
   }
   .marquee {
     overflow-x: auto;
+  }
+}
+
+/* 연습 주제 캐러셀(여러 줄, 서로 반대로 흐름) */
+.practice-wall {
+  padding: 96px 0;
+  background: var(--surface);
+  overflow: hidden;
+}
+.section-head {
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.section-head h2 {
+  font-size: clamp(30px, 4vw, 40px);
+  font-weight: 800;
+}
+.marquee-rows {
+  display: grid;
+  gap: 16px;
+  margin-top: 48px;
+}
+.marquee-rows .marquee {
+  border: 0;
+  padding: 4px 0;
+}
+.marquee-reverse .marquee-track {
+  animation-direction: reverse;
+}
+.tile {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  height: 68px;
+  padding: 0 28px;
+  border-radius: 16px;
+  background: #fff;
+  box-shadow: 0 1px 2px rgba(17, 24, 39, 0.04), 0 6px 20px -8px rgba(75, 36, 255, 0.12);
+  white-space: nowrap;
+  font-weight: 700;
+  font-size: 17px;
+}
+.tile-topic {
+  min-width: 180px;
+  justify-content: center;
+  font-size: 18px;
+}
+.tile-topic span {
+  font-size: 24px;
+}
+.tile-question {
+  font-weight: 600;
+  color: var(--ink);
+}
+.tile-q {
+  display: inline-grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  background: var(--primary);
+  color: #fff;
+  font-size: 14px;
+  font-weight: 800;
+}
+.tile-feedback {
+  background: var(--success-soft);
+  color: #065f46;
+  font-weight: 600;
+}
+.tile-check {
+  width: 10px;
+  height: 6px;
+  border-left: 2px solid currentColor;
+  border-bottom: 2px solid currentColor;
+  transform: rotate(-45deg) translateY(-2px);
+}
+.tile-keyword {
+  background: var(--primary-soft);
+  color: var(--primary);
+}
+@media (max-width: 720px) {
+  .tile {
+    height: 56px;
+    padding: 0 20px;
+    font-size: 15px;
+  }
+  .tile-topic {
+    min-width: 140px;
   }
 }

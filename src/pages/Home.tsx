@@ -32,6 +32,36 @@ function ReviewCard({ review }: { review: Review }) {
   );
 }
 
+// 앱 배경 설문의 실제 주제(BackgroundProfile.swift)
+const TOPICS = [
+  ["🎬", "영화 보기"], ["🎧", "음악 감상"], ["☕", "카페 가기"], ["🛍️", "쇼핑"], ["📚", "독서"],
+  ["🍳", "요리"], ["🎮", "게임"], ["📷", "사진 찍기"], ["🎸", "악기 연주"], ["🐶", "반려동물"],
+  ["🏃", "조깅"], ["🏋️", "헬스"], ["🏊", "수영"], ["🚴", "자전거"], ["⚽", "축구"],
+  ["🧘", "요가"], ["⛰️", "등산"], ["🏖️", "바다 여행"], ["🏕️", "캠핑"], ["✈️", "해외여행"],
+];
+
+// OPIc 유형의 질문 예시. 첫 문장은 실제 앱 화면에 나온 질문이다.
+const QUESTIONS = [
+  "Describe a place on campus where you like to sit for a few minutes.",
+  "Tell me about the café you often go to.",
+  "What kind of music do you usually listen to?",
+  "Describe your home and the room you like most.",
+  "Talk about a memorable trip you took recently.",
+  "How has the way people watch movies changed?",
+  "Describe a typical day when you go jogging.",
+  "Tell me about a problem you had while shopping.",
+];
+
+// 실제 결과 화면(개선할 점)에 나온 피드백과 같은 형식의 문장들
+const FEEDBACK = [
+  "과제에 맞는 장소와 이유를 반드시 말하기",
+  "한 문장으로 끝내지 말고 세부 정보 2~3개 더하기",
+  "because, and, also로 답을 늘리기",
+  "과거 경험은 과거 시제로 일관되게",
+  "구체적인 예시 하나로 마무리하기",
+  "질문의 핵심 단어를 첫 문장에서 다시 쓰기",
+];
+
 const GALLERY = [
   { src: "/images/daily-idle.webp", label: "오늘의 문제" },
   { src: "/images/daily-recording.webp", label: "답변 녹음" },
@@ -103,14 +133,6 @@ export function Home() {
           </div>
         </div>
       </section>
-
-      <Marquee label="데일리오픽 주요 기능" speed={45}>
-        {KEYWORDS.map((k) => (
-          <span key={k} className="keyword">
-            {k}
-          </span>
-        ))}
-      </Marquee>
 
       <Feature
         eyebrow="01 · 오늘의 문제"
@@ -208,6 +230,45 @@ export function Home() {
           </div>
         }
       />
+
+      <section className="practice-wall">
+        <div className="container section-head" data-reveal>
+          <p className="eyebrow">매일 말하는 연습</p>
+          <h2>내 관심사로, 실전 같은 질문을</h2>
+          <p className="lead">배경 설문에서 고른 주제로 문제가 나오고, 답변마다 바로 쓸 수 있는 피드백이 돌아와요.</p>
+        </div>
+        <div className="marquee-rows">
+          <Marquee label="설문 주제" speed={50}>
+            {TOPICS.map(([icon, label]) => (
+              <span key={label} className="tile tile-topic">
+                <span aria-hidden="true">{icon}</span>
+                {label}
+              </span>
+            ))}
+          </Marquee>
+          <Marquee label="질문 예시" speed={70} reverse>
+            {QUESTIONS.map((q) => (
+              <span key={q} className="tile tile-question">
+                <span className="tile-q">Q</span>
+                {q}
+              </span>
+            ))}
+          </Marquee>
+          <Marquee label="AI 피드백 예시" speed={55}>
+            {FEEDBACK.map((f) => (
+              <span key={f} className="tile tile-feedback">
+                <span className="tile-check" aria-hidden="true" />
+                {f}
+              </span>
+            ))}
+            {KEYWORDS.map((k) => (
+              <span key={k} className="tile tile-keyword">
+                {k}
+              </span>
+            ))}
+          </Marquee>
+        </div>
+      </section>
 
       <section className="gallery-section">
         <div className="container" data-reveal>

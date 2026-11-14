@@ -21,18 +21,23 @@ export function AppStoreButton({ label = "App Store에서 받기" }: { label?: s
 }
 
 export function Logo({ size }: { size: number }) {
-  return (
-    <picture>
-      <source srcSet="/images/logo-mark-dark.png" media="(prefers-color-scheme: dark)" />
-      <img src="/images/logo-mark.png" alt="" width={size} height={size} />
-    </picture>
-  );
+  return <img src="/images/logo-mark.png" alt="" width={size} height={size} />;
 }
 
 /** 가로 무한 스크롤. 같은 줄을 두 번 그려 -50%만큼 흘려보낸다. */
-export function Marquee({ children, label, speed = 40 }: { children: ReactNode; label: string; speed?: number }) {
+export function Marquee({
+  children,
+  label,
+  speed = 40,
+  reverse,
+}: {
+  children: ReactNode;
+  label: string;
+  speed?: number;
+  reverse?: boolean;
+}) {
   return (
-    <div className="marquee" role="region" aria-label={label} style={{ "--marquee-duration": `${speed}s` } as CSSProperties}>
+    <div className={`marquee${reverse ? " marquee-reverse" : ""}`} role="region" aria-label={label} style={{ "--marquee-duration": `${speed}s` } as CSSProperties}>
       <div className="marquee-track">
         <div className="marquee-group">{children}</div>
         <div className="marquee-group" aria-hidden="true">
