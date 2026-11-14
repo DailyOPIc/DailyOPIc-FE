@@ -1,14 +1,6 @@
 import type { CSSProperties, ReactNode } from "react";
 import { APP_STORE_URL } from "../site";
 
-export function Phone({ src, alt, tilt }: { src: string; alt: string; tilt?: "left" | "right" }) {
-  return (
-    <figure className={`phone${tilt ? ` phone-${tilt}` : ""}`}>
-      <img src={src} alt={alt} loading="lazy" width={923} height={1890} />
-    </figure>
-  );
-}
-
 export function AppStoreButton({ label = "App Store에서 받기" }: { label?: string }) {
   return (
     <a className="button button-primary store" href={APP_STORE_URL} target="_blank" rel="noreferrer">

@@ -1,6 +1,7 @@
 import type { CSSProperties, ReactNode } from "react";
 import { Link } from "react-router-dom";
-import { AppStoreButton, Logo, Marquee, Phone } from "../components/Bits";
+import { AppStoreButton, Logo, Marquee } from "../components/Bits";
+import { AnalysisDemo, CountUp, LogoBuild, QuestionDemo, RoutineDemo } from "../components/Demos";
 import { REVIEWS, type Review } from "../site";
 
 const GRADES = ["NL", "NM", "NH", "IL", "IM1", "IM2", "IM3", "IH", "AL"];
@@ -17,24 +18,6 @@ const KEYWORDS = [
   "오늘의 단어 20개",
   "연속 학습 기록",
 ];
-
-function ReviewCard({ review }: { review: Review }) {
-  return (
-    <article className="review">
-      {review.rating && (
-        <p className="stars" aria-label={`별점 ${review.rating}점`}>
-          {"★".repeat(review.rating)}
-          <span className="stars-off">{"★".repeat(5 - review.rating)}</span>
-        </p>
-      )}
-      {review.title && <h3>{review.title}</h3>}
-      <p className={review.title ? undefined : "review-quote"}>{review.body}</p>
-      <p className="review-meta">
-        {review.author} · {review.source}
-      </p>
-    </article>
-  );
-}
 
 // 앱 배경 설문의 실제 주제(BackgroundProfile.swift)
 const TOPICS = [
@@ -66,14 +49,25 @@ const FEEDBACK = [
   "질문의 핵심 단어를 첫 문장에서 다시 쓰기",
 ];
 
-const GALLERY = [
-  { src: "/images/daily-idle.webp", label: "오늘의 문제" },
-  { src: "/images/daily-recording.webp", label: "답변 녹음" },
-  { src: "/images/daily-review.webp", label: "답변 확인" },
-  { src: "/images/result.webp", label: "AI 분석 결과" },
-  { src: "/images/planner.webp", label: "학습 플래너" },
-  { src: "/images/vocab.webp", label: "오늘의 단어" },
-];
+const WORDMARK = "DailyOPIc".split("");
+
+function ReviewCard({ review }: { review: Review }) {
+  return (
+    <article className="review">
+      {review.rating && (
+        <p className="stars" aria-label={`별점 ${review.rating}점`}>
+          {"★".repeat(review.rating)}
+          <span className="stars-off">{"★".repeat(5 - review.rating)}</span>
+        </p>
+      )}
+      {review.title && <h3>{review.title}</h3>}
+      <p className={review.title ? undefined : "review-quote"}>{review.body}</p>
+      <p className="review-meta">
+        {review.author} · {review.source}
+      </p>
+    </article>
+  );
+}
 
 type FeatureProps = {
   eyebrow: string;
@@ -99,9 +93,7 @@ function Feature({ eyebrow, title, points, media, reverse }: FeatureProps) {
             ))}
           </ul>
         </div>
-        <div className="feature-media" data-reveal style={{ "--reveal-delay": "120ms" } as CSSProperties}>
-          {media}
-        </div>
+        <div className="feature-media">{media}</div>
       </div>
     </section>
   );
@@ -129,13 +121,44 @@ export function Home() {
                 요금제 보기
               </Link>
             </div>
-            <p className="note">웹에서도 바로 연습할 수 있도록 준비하고 있어요.</p>
           </div>
-          <div className="hero-media">
-            <Phone src="/images/daily-idle.webp" alt="오늘의 문제 화면" tilt="left" />
-            <Phone src="/images/result.webp" alt="AI 분석 결과 화면" tilt="right" />
+          <LogoBuild />
+        </div>
+
+        <div className="container stats">
+          <div className="stat" data-reveal>
+            <span className="stat-label">누적 다운로드</span>
+            <strong>
+              <CountUp to={2600} suffix="+" />
+            </strong>
+          </div>
+          <div className="stat" data-reveal style={{ "--reveal-delay": "100ms" } as CSSProperties}>
+            <span className="stat-label">매일 받는 실전 문항</span>
+            <strong>
+              <CountUp to={14} suffix="문항" />
+            </strong>
+          </div>
+          <div className="stat" data-reveal style={{ "--reveal-delay": "200ms" } as CSSProperties}>
+            <span className="stat-label">AI가 분석하는 영역</span>
+            <strong>
+              <CountUp to={5} suffix="개 영역" />
+            </strong>
           </div>
         </div>
+        <p className="container stats-note">누적 다운로드: App Store Connect 첫 다운로드 기준(2026.11.12)</p>
+      </section>
+
+      <section className="wordmark" aria-label="DailyOPIc">
+        <p className="wordmark-letters" data-reveal aria-hidden="true">
+          {WORDMARK.map((ch, n) => (
+            <span key={n} className={n >= 5 ? "strong" : undefined} style={{ "--i": n } as CSSProperties}>
+              {ch}
+            </span>
+          ))}
+        </p>
+        <p className="wordmark-sub" data-reveal>
+          하루 10분, 말하기가 습관이 되는 OPIc 루틴
+        </p>
       </section>
 
       <Feature
@@ -151,12 +174,7 @@ export function Home() {
             body: "질문을 듣고 마이크를 누르면 끝. 3분 안에 실전처럼 답해요.",
           },
         ]}
-        media={
-          <div className="phone-pair">
-            <Phone src="/images/daily-idle.webp" alt="질문 듣기와 녹음 버튼이 있는 문제 화면" />
-            <Phone src="/images/daily-recording.webp" alt="답변을 녹음하는 화면" />
-          </div>
-        }
+        media={<QuestionDemo />}
       />
 
       <Feature
@@ -169,16 +187,11 @@ export function Home() {
             body: "내 답변이 지금 어느 등급인지, 목표까지 얼마나 남았는지 한눈에 보여줘요.",
           },
           {
-            title: "잘한 점 · 개선할 점 · 모범 답안",
-            body: "막연한 점수 대신 다음 답변에서 바로 쓸 수 있는 구체적인 교정을 받아요.",
+            title: "5개 영역 · 잘한 점 · 개선할 점",
+            body: "과제 충족부터 유창성까지, 다음 답변에서 바로 쓸 수 있는 교정을 받아요.",
           },
         ]}
-        media={
-          <div className="phone-pair">
-            <Phone src="/images/daily-review.webp" alt="녹음한 답변을 확인하는 화면" />
-            <Phone src="/images/result.webp" alt="예상 등급과 잘한 점, 개선할 점을 보여주는 결과 화면" />
-          </div>
-        }
+        media={<AnalysisDemo />}
       />
 
       <Feature
@@ -198,12 +211,8 @@ export function Home() {
           <div className="grade-card" aria-label="OPIc 등급 단계" data-reveal>
             <p className="grade-card-title">OPIc 9단계 등급</p>
             <ol className="grades">
-              {GRADES.map((g, i) => (
-                <li
-                  key={g}
-                  className={g === "IH" ? "is-target" : undefined}
-                  style={{ "--i": i } as CSSProperties}
-                >
+              {GRADES.map((g, n) => (
+                <li key={g} className={g === "IH" ? "is-target" : undefined} style={{ "--i": n } as CSSProperties}>
                   {g}
                 </li>
               ))}
@@ -227,12 +236,7 @@ export function Home() {
             body: "답변에 바로 쓸 단어 · 표현 · 패턴을 발음과 함께 익혀요.",
           },
         ]}
-        media={
-          <div className="phone-pair">
-            <Phone src="/images/planner.webp" alt="연속 학습과 달력이 있는 플래너 화면" />
-            <Phone src="/images/vocab.webp" alt="오늘의 단어 카드 화면" />
-          </div>
-        }
+        media={<RoutineDemo />}
       />
 
       <section className="practice-wall">
@@ -274,31 +278,16 @@ export function Home() {
         </div>
       </section>
 
-      <section className="gallery-section">
-        <div className="container" data-reveal>
-          <p className="eyebrow">실제 앱 화면</p>
-          <h2>보이는 그대로 연습해요</h2>
-        </div>
-        <div className="gallery" tabIndex={0} aria-label="앱 화면 모음, 가로로 스크롤">
-          {GALLERY.map((g) => (
-            <figure key={g.src} className="gallery-item">
-              <img src={g.src} alt={g.label} loading="lazy" width={923} height={1890} />
-              <figcaption>{g.label}</figcaption>
-            </figure>
-          ))}
-        </div>
-      </section>
-
       <section className="reviews">
-        <div className="container" data-reveal>
+        <div className="container section-head" data-reveal>
           <p className="eyebrow">사용자 후기</p>
           <h2>먼저 써본 분들의 이야기</h2>
         </div>
         {REVIEWS.length >= 3 ? (
           <Marquee label="사용자 후기" speed={60}>
             {/* 후기가 적을 때 넓은 화면에서 빈칸이 생기지 않도록 한 줄 안에서 한 번 더 반복한다. */}
-            {[...REVIEWS, ...REVIEWS].map((r, i) => (
-              <ReviewCard key={i} review={r} />
+            {[...REVIEWS, ...REVIEWS].map((r, n) => (
+              <ReviewCard key={n} review={r} />
             ))}
           </Marquee>
         ) : (

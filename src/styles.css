@@ -99,12 +99,6 @@ h3 {
   max-width: 34em;
 }
 
-.note {
-  color: var(--ink-2);
-  font-size: 14px;
-  margin: 16px 0 0;
-}
-
 /* 버튼 */
 .button {
   display: inline-flex;
@@ -265,24 +259,6 @@ h3 {
   }
 }
 
-/* 휴대폰 프레임 */
-.phone {
-  margin: 0;
-  width: 260px;
-  max-width: 100%;
-  padding: 10px;
-  border-radius: 44px;
-  background: #0f0f17;
-  box-shadow: var(--shadow);
-  flex-shrink: 0;
-}
-
-.phone img {
-  border-radius: 34px;
-  width: 100%;
-  height: auto;
-}
-
 /* 히어로 */
 .hero {
   padding: 72px 0 96px;
@@ -309,48 +285,12 @@ h3 {
   margin-top: 32px;
 }
 
-.hero-media {
-  position: relative;
-  display: flex;
-  justify-content: center;
-  height: 560px;
-}
-
-.hero-media .phone {
-  position: absolute;
-  width: 250px;
-}
-
-.phone-left {
-  left: 6%;
-  top: 0;
-  transform: rotate(-4deg);
-}
-
-.phone-right {
-  right: 6%;
-  top: 56px;
-  transform: rotate(4deg);
-}
-
 @media (max-width: 880px) {
   .hero {
     padding: 48px 0 64px;
   }
   .hero-inner {
     grid-template-columns: 1fr;
-  }
-  .hero-media {
-    height: 440px;
-  }
-  .hero-media .phone {
-    width: 190px;
-  }
-  .phone-left {
-    left: calc(50% - 190px);
-  }
-  .phone-right {
-    right: calc(50% - 190px);
   }
 }
 
@@ -401,20 +341,6 @@ h3 {
   color: var(--ink-2);
 }
 
-.phone-pair {
-  display: flex;
-  justify-content: center;
-  gap: 20px;
-}
-
-.phone-pair .phone {
-  width: 220px;
-}
-
-.phone-pair .phone:last-child {
-  margin-top: 48px;
-}
-
 @media (max-width: 880px) {
   .feature {
     padding: 64px 0;
@@ -425,14 +351,6 @@ h3 {
   }
   .feature-reverse .feature-copy {
     order: 0;
-  }
-  .phone-pair .phone {
-    width: calc(50% - 10px);
-    padding: 6px;
-    border-radius: 30px;
-  }
-  .phone-pair .phone img {
-    border-radius: 24px;
   }
 }
 
@@ -481,44 +399,10 @@ h3 {
   font-size: 15px;
 }
 
-/* 갤러리 */
-.gallery-section {
-  padding: 96px 0;
-}
-
-.gallery-section h2,
 .reviews h2,
 .cta h2 {
   font-size: clamp(30px, 4vw, 40px);
   font-weight: 800;
-}
-
-.gallery {
-  display: flex;
-  gap: 20px;
-  overflow-x: auto;
-  scroll-snap-type: x mandatory;
-  padding: 40px max(20px, calc((100vw - 1080px) / 2)) 24px;
-  scrollbar-width: thin;
-}
-
-.gallery-item {
-  margin: 0;
-  flex: 0 0 220px;
-  scroll-snap-align: start;
-}
-
-.gallery-item img {
-  border-radius: 28px;
-  border: 1px solid var(--line);
-}
-
-.gallery-item figcaption {
-  margin-top: 12px;
-  text-align: center;
-  font-weight: 600;
-  color: var(--ink-2);
-  font-size: 15px;
 }
 
 /* 후기 */
@@ -952,31 +836,8 @@ h3 {
 .hero-copy > :nth-child(4) { animation-delay: 240ms; }
 .hero-copy > :nth-child(5) { animation-delay: 320ms; }
 
-.hero-media .phone {
-  animation: rise 1s var(--ease-out) both, float 6s ease-in-out 1s infinite;
-}
-.hero-media .phone-right {
-  animation-delay: 200ms, 1.6s;
-}
-
 @keyframes rise {
   from { opacity: 0; transform: translateY(32px); }
-}
-
-/* 기울기를 유지한 채 둥실 */
-.hero-media .phone-left { --tilt: -4deg; }
-.hero-media .phone-right { --tilt: 4deg; }
-@keyframes float {
-  0%, 100% { transform: translateY(0) rotate(var(--tilt)); }
-  50% { transform: translateY(-14px) rotate(var(--tilt)); }
-}
-
-/* 기능 섹션 휴대폰: 올리면 살짝 들림 */
-.phone-pair .phone {
-  transition: transform 0.4s var(--ease-out), box-shadow 0.4s var(--ease-out);
-}
-.phone-pair .phone:hover {
-  transform: translateY(-8px);
 }
 
 /* 등급 칩: 카드가 보이면 NL부터 IH까지 차례로 켜진다 */
@@ -998,19 +859,14 @@ h3 {
   50% { box-shadow: 0 0 0 8px rgba(255, 255, 255, 0); }
 }
 
-/* 카드 호버 */
 .plan,
-.review,
-.gallery-item img {
+.review {
   transition: transform 0.35s var(--ease-out), box-shadow 0.35s var(--ease-out);
 }
 .plan:hover,
 .review:hover {
   transform: translateY(-6px);
   box-shadow: var(--shadow);
-}
-.gallery-item img:hover {
-  transform: translateY(-6px) scale(1.02);
 }
 
 .button-primary:hover {
@@ -1036,9 +892,6 @@ h3 {
   display: flex;
   width: max-content;
   animation: marquee var(--marquee-duration, 40s) linear infinite;
-}
-.marquee:hover .marquee-track {
-  animation-play-state: paused;
 }
 .marquee-group {
   display: flex;
@@ -1193,4 +1046,471 @@ h3 {
   margin-top: 24px;
   font-size: 13px;
   color: var(--ink-2);
+}
+
+/* ───────── 히어로 v2: 로고 빌드 + 통계 ───────── */
+.hero {
+  background:
+    radial-gradient(900px 480px at 82% 18%, rgba(155, 135, 245, 0.32), transparent 70%),
+    radial-gradient(700px 420px at 8% 90%, rgba(75, 36, 255, 0.12), transparent 70%),
+    linear-gradient(180deg, #f6f4ff 0%, #ffffff 100%);
+}
+
+.logo-build {
+  position: relative;
+  aspect-ratio: 1;
+  width: min(440px, 100%);
+  justify-self: center;
+  display: grid;
+  place-items: center;
+}
+
+.logo-svg {
+  width: 72%;
+  position: relative;
+  z-index: 1;
+  filter: drop-shadow(0 24px 40px rgba(75, 36, 255, 0.25));
+}
+
+.stroke {
+  fill: none;
+  stroke: var(--primary);
+  stroke-linecap: round;
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  animation: draw 0.6s var(--ease-out) forwards;
+}
+.s1 { animation-delay: 0.2s; }
+.s2 { animation-delay: 0.7s; }
+.s3 { animation-delay: 1.05s; animation-duration: 0.3s; }
+.s4 { animation-delay: 1.3s; animation-duration: 0.4s; }
+.s5 { animation-delay: 1.6s; animation-duration: 0.9s; }
+@keyframes draw {
+  to { stroke-dashoffset: 0; }
+}
+
+.wave {
+  position: absolute;
+  inset: 18%;
+  border-radius: 50%;
+  border: 2px solid var(--primary-mid);
+  opacity: 0;
+  animation: wave 3.6s ease-out calc(2.4s + var(--i, 0) * 1.2s) infinite;
+}
+@keyframes wave {
+  0% { transform: scale(0.7); opacity: 0.6; }
+  100% { transform: scale(1.35); opacity: 0; }
+}
+
+.float-chip {
+  position: absolute;
+  z-index: 2;
+  padding: 10px 16px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.82);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.9);
+  box-shadow: 0 12px 30px -12px rgba(75, 36, 255, 0.35);
+  font-weight: 700;
+  font-size: 15px;
+  white-space: nowrap;
+  opacity: 0;
+  animation: pop 0.6s var(--ease-out) forwards, bob 5s ease-in-out infinite;
+}
+.float-chip b {
+  color: var(--primary);
+  margin-right: 4px;
+}
+.chip-a { top: 8%; right: 0; animation-delay: 2.6s, 3.2s; }
+.chip-b { top: 46%; left: -4%; animation-delay: 2.85s, 3.5s; }
+.chip-c { bottom: 8%; right: 6%; animation-delay: 3.1s, 3.8s; }
+@keyframes pop {
+  from { opacity: 0; transform: translateY(12px) scale(0.9); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes bob {
+  0%, 100% { translate: 0 0; }
+  50% { translate: 0 -8px; }
+}
+
+.stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  margin-top: 56px;
+}
+.stat {
+  padding: 28px;
+  border-radius: var(--radius-md);
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(14px);
+  border: 1px solid rgba(255, 255, 255, 0.95);
+  box-shadow: 0 10px 30px -18px rgba(75, 36, 255, 0.4);
+}
+.stat-label {
+  display: block;
+  color: var(--ink-2);
+  font-weight: 600;
+}
+.stat strong {
+  display: block;
+  margin-top: 6px;
+  font-size: clamp(30px, 4vw, 40px);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+}
+.stats-note {
+  margin-top: 12px;
+  font-size: 13px;
+  color: var(--ink-2);
+}
+@media (max-width: 880px) {
+  .logo-build { width: min(340px, 90%); margin-top: 8px; }
+  .stats { grid-template-columns: 1fr; margin-top: 40px; }
+  .stat { padding: 20px 24px; }
+}
+
+/* 큰 워드마크: 글자가 아래에서 차례로 올라와 완성된다 */
+.wordmark {
+  padding: 96px 0 24px;
+  text-align: center;
+  overflow: hidden;
+}
+.wordmark-letters {
+  margin: 0;
+  font-size: clamp(64px, 15vw, 200px);
+  font-weight: 900;
+  letter-spacing: -0.04em;
+  line-height: 1;
+  opacity: 1 !important;
+  transform: none !important;
+}
+.wordmark-letters span {
+  display: inline-block;
+  color: var(--primary-soft);
+  transform: translateY(60%);
+  opacity: 0;
+  transition: transform 0.8s var(--ease-out), opacity 0.8s var(--ease-out), color 0.8s ease;
+  transition-delay: calc(var(--i) * 60ms);
+}
+.wordmark-letters span.strong {
+  color: var(--primary-mid);
+}
+.wordmark-letters.is-visible span {
+  transform: none;
+  opacity: 1;
+}
+.wordmark-letters.is-visible span.strong {
+  color: var(--primary);
+  transition-delay: calc(var(--i) * 60ms), calc(var(--i) * 60ms), calc(0.9s + var(--i) * 60ms);
+}
+.wordmark-sub {
+  margin: 20px 0 0;
+  color: var(--ink-2);
+  font-size: 19px;
+  font-weight: 600;
+}
+
+/* ───────── 기능 데모 공통 ───────── */
+.demo {
+  position: relative;
+  margin: 0 auto;
+  width: min(420px, 100%);
+  padding: 28px;
+  border-radius: var(--radius-lg);
+  background: #fff;
+  border: 1px solid var(--line);
+  box-shadow: var(--shadow);
+}
+
+/* 01 오늘의 문제 */
+.q-chips {
+  display: flex;
+  gap: 8px;
+}
+.q-chips span {
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--ink-2);
+  font-weight: 700;
+  font-size: 14px;
+  animation: chip-step 6s steps(1) infinite;
+  animation-delay: calc(var(--i) * 1s);
+}
+@keyframes chip-step {
+  0%, 16.66% { background: var(--primary); color: #fff; }
+  16.67%, 100% { background: var(--surface); color: var(--ink-2); }
+}
+.q-card {
+  margin-top: 18px;
+  padding: 20px;
+  border-radius: 18px;
+  background: var(--primary-soft);
+  border: 1px solid #d9d0ff;
+}
+.q-label {
+  color: var(--primary);
+  font-weight: 700;
+  font-size: 13px;
+}
+.q-card p {
+  margin: 8px 0 0;
+  font-weight: 700;
+  font-size: 19px;
+  line-height: 1.35;
+}
+.q-listen {
+  margin: 20px auto 0;
+  width: fit-content;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 16px;
+  border-radius: 999px;
+  background: var(--primary-soft);
+  color: var(--primary);
+  font-weight: 700;
+  font-size: 15px;
+}
+.bars {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  height: 16px;
+}
+.bars span {
+  width: 3px;
+  height: 100%;
+  border-radius: 2px;
+  background: currentColor;
+  animation: eq 0.9s ease-in-out infinite;
+  animation-delay: calc(var(--i) * -0.18s);
+}
+@keyframes eq {
+  0%, 100% { transform: scaleY(0.3); }
+  50% { transform: scaleY(1); }
+}
+.q-mic {
+  position: relative;
+  margin: 22px auto 0;
+  width: 76px;
+  height: 76px;
+  border-radius: 50%;
+  background: var(--primary);
+  color: #fff;
+  display: grid;
+  place-items: center;
+  box-shadow: 0 16px 30px -10px rgba(75, 36, 255, 0.6);
+}
+.q-mic svg {
+  position: relative;
+}
+.q-mic .ring {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  border: 2px solid var(--primary);
+  animation: wave 2.4s ease-out infinite;
+  animation-delay: calc(var(--i, 0) * 1.2s);
+}
+.q-caption {
+  margin: 14px 0 0;
+  text-align: center;
+  font-weight: 700;
+  font-size: 15px;
+}
+
+/* 02 AI 분석 */
+.grade-box {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  padding: 22px 24px;
+  border-radius: 20px;
+  background: var(--primary);
+  color: #fff;
+}
+.grade-box-label {
+  font-weight: 700;
+  opacity: 0.9;
+}
+.grade-roll-window {
+  display: block;
+  height: 64px;
+  overflow: hidden;
+}
+.grade-roll {
+  display: flex;
+  flex-direction: column;
+  font-size: 56px;
+  font-weight: 900;
+  line-height: 64px;
+  text-align: right;
+}
+.demo-analysis.is-visible .grade-roll {
+  animation: roll 1.8s cubic-bezier(0.65, 0, 0.35, 1) 0.4s forwards;
+}
+@keyframes roll {
+  to { transform: translateY(-256px); }
+}
+.areas {
+  list-style: none;
+  margin: 20px 0 0;
+  padding: 0;
+  display: grid;
+  gap: 10px;
+}
+.areas li {
+  display: grid;
+  grid-template-columns: 76px 1fr;
+  align-items: center;
+  gap: 12px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--ink-2);
+}
+.bar {
+  height: 8px;
+  border-radius: 999px;
+  background: var(--surface);
+  overflow: hidden;
+}
+.bar span {
+  display: block;
+  height: 100%;
+  width: var(--v);
+  border-radius: inherit;
+  background: var(--primary);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 1s var(--ease-out);
+  transition-delay: calc(0.8s + var(--i) * 0.12s);
+}
+.demo-analysis.is-visible .bar span {
+  transform: none;
+}
+.fb {
+  display: grid;
+  gap: 8px;
+  margin-top: 18px;
+}
+.fb span {
+  padding: 12px 14px;
+  border-radius: 14px;
+  font-weight: 600;
+  font-size: 14px;
+  opacity: 0;
+  transform: translateX(16px);
+  transition: opacity 0.5s var(--ease-out), transform 0.5s var(--ease-out);
+  transition-delay: calc(1.8s + var(--i) * 0.25s);
+}
+.demo-analysis.is-visible .fb span {
+  opacity: 1;
+  transform: none;
+}
+.fb-good {
+  background: var(--success-soft);
+  color: #065f46;
+}
+.fb-fix {
+  background: var(--primary-soft);
+  color: var(--primary);
+}
+
+/* 04 루틴 */
+.demo-routine {
+  display: grid;
+  gap: 16px;
+}
+.cal-head {
+  display: flex;
+  justify-content: space-between;
+  font-weight: 700;
+}
+.cal-head b {
+  color: var(--primary);
+}
+.cal-grid {
+  margin-top: 12px;
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 6px;
+}
+.cal-grid span {
+  aspect-ratio: 1;
+  display: grid;
+  place-items: center;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink-2);
+  background: var(--surface);
+  transition: background-color 0.3s ease, color 0.3s ease, transform 0.3s var(--ease-out);
+}
+.cal-grid span.today {
+  box-shadow: inset 0 0 0 2px var(--primary);
+  color: var(--primary);
+}
+.demo-routine.is-visible .cal-grid span.on {
+  background: var(--primary);
+  color: #fff;
+  transform: scale(1.04);
+  transition-delay: calc(0.3s + var(--i) * 0.12s);
+}
+.flip {
+  perspective: 900px;
+  height: 128px;
+}
+.flip-inner {
+  position: relative;
+  height: 100%;
+  transform-style: preserve-3d;
+  animation: flip 6s ease-in-out 1.6s infinite;
+}
+@keyframes flip {
+  0%, 40% { transform: rotateY(0); }
+  50%, 90% { transform: rotateY(180deg); }
+  100% { transform: rotateY(360deg); }
+}
+.flip-face {
+  position: absolute;
+  inset: 0;
+  backface-visibility: hidden;
+  border-radius: 18px;
+  padding: 18px 20px;
+  background: var(--primary-soft);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.flip-face small {
+  color: var(--primary);
+  font-weight: 700;
+}
+.flip-face b {
+  font-size: 28px;
+  font-weight: 800;
+}
+.flip-face span {
+  color: var(--ink-2);
+  font-size: 14px;
+}
+.flip-back {
+  transform: rotateY(180deg);
+  background: var(--primary);
+  color: #fff;
+}
+.flip-back small,
+.flip-back span {
+  color: rgba(255, 255, 255, 0.85);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .stroke { stroke-dashoffset: 0; }
+  .float-chip, .fb span { opacity: 1; transform: none; }
+  .wordmark-letters span { opacity: 1; transform: none; }
+  .bar span { transform: none; }
+  .grade-roll { transform: translateY(-256px); }
 }
