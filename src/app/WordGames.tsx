@@ -101,7 +101,7 @@ export function WordGames({ onReward }: { onReward: (xp: number) => Recorded }) 
         <h2>오늘의 표현 미리보기</h2>
         <div className="expr-list">
           {shuffle(EXPRESSIONS)
-            .slice(0, 6)
+            .slice(0, 3)
             .map((e) => (
               <button
                 key={e.en}
@@ -474,13 +474,7 @@ function Dictation({ onExit, onDone }: { onExit: () => void; onDone: (s: GameSum
           </button>
           <button
             className="speak-btn slow"
-            onClick={() => {
-              const u = new SpeechSynthesisUtterance(item.en);
-              u.lang = "en-US";
-              u.rate = 0.6;
-              window.speechSynthesis.cancel();
-              window.speechSynthesis.speak(u);
-            }}
+            onClick={() => speak(item.en, { rate: 0.6 })}
             aria-label="천천히 듣기"
           >
             <span className="slow-label">0.6×</span>

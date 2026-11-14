@@ -133,12 +133,57 @@ export function useAnswerRecorder() {
   return { listening, liveText, remaining, error, start, stop, onAutoStop };
 }
 
-/** 질문 읽어주기(브라우저 내장 TTS). iOS의 AVSpeechSynthesizer 자리. */
-export function speak(text: string) {
+// ── 질문 읽어주기(브라우저 내장 TTS). iOS의 AVSpeechSynthesizer 자리 ──
+// 음성을 지정하지 않으면 브라우저가 시스템 기본 음성(맥은 한국어 '유나' 등)으로 영어를 읽어
+// 발음이 이상해진다. 자연스러운 미국 영어 음성을 직접 고른다.
+const PREFERRED = [
+  "Google US English",
+  "Microsoft Aria Online",
+  "Microsoft Jenny Online",
+  "Microsoft Guy Online",
+  "Samantha",
+  "Ava",
+  "Allison",
+  "Susan",
+  "Alex",
+];
+// macOS의 장난감 · 효과 음성(로봇 같은 소리)
+const NOVELTY = /albert|bad news|bahh|bells|boing|bubbles|cellos|good news|jester|organ|superstar|trinoids|whisper|wobble|zarvox|fred|junior|ralph|kathy|grandma|grandpa|eddy|flo|reed|rocko|sandy|shelley/i;
+
+let chosen: SpeechSynthesisVoice | null = null;
+
+export function pickVoice(voices: SpeechSynthesisVoice[]): SpeechSynthesisVoice | null {
+  const english = voices.filter((v) => /^en[-_]US/i.test(v.lang) && !NOVELTY.test(v.name));
+  const score = (v: SpeechSynthesisVoice) => {
+    const i = PREFERRED.findIndex((p) => v.name.startsWith(p));
+    let s = i === -1 ? 100 : i;
+    if (/natural|neural|enhanced|premium|online/i.test(v.name)) s -= 50;
+    if (v.localService === false) s -= 5; // 클라우드 음성이 대체로 더 자연스럽다
+    return s;
+  };
+  return english.sort((a, b) => score(a) - score(b))[0] ?? voices.find((v) => /^en/i.test(v.lang)) ?? null;
+}
+
+function ensureVoice() {
   if (!("speechSynthesis" in window)) return;
+  if (!chosen) chosen = pickVoice(window.speechSynthesis.getVoices());
+}
+if (typeof window !== "undefined" && "speechSynthesis" in window) {
+  // 음성 목록은 비동기로 채워진다(Chrome)
+  window.speechSynthesis.addEventListener?.("voiceschanged", () => {
+    chosen = pickVoice(window.speechSynthesis.getVoices());
+  });
+  ensureVoice();
+}
+
+export function speak(text: string, { rate = 0.95 } = {}) {
+  if (!("speechSynthesis" in window)) return;
+  ensureVoice();
   window.speechSynthesis.cancel();
   const utterance = new SpeechSynthesisUtterance(text);
   utterance.lang = "en-US";
-  utterance.rate = 0.95;
+  if (chosen) utterance.voice = chosen;
+  utterance.rate = rate;
+  utterance.pitch = 1;
   window.speechSynthesis.speak(utterance);
 }

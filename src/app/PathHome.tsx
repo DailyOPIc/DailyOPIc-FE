@@ -1,4 +1,4 @@
-import { Fragment, type CSSProperties } from "react";
+import { useEffect, useRef, useState, type CSSProperties } from "react";
 import { Icon, type IconName } from "../assets/Icon";
 import { Mascot } from "../assets/Mascot";
 import type { Evaluation, QuestionSet } from "../lib/api";
@@ -15,7 +15,7 @@ export const SECTION: Record<string, { label: string; icon: IconName }> = {
   practice: { label: "연습", icon: "target" },
 };
 
-// 이 문항까지 다 하면 상자가 열린다(인덱스 기준, 5문항마다).
+// 이 문항(인덱스)까지 다 하면 상자가 열린다(5문항마다).
 export const CHEST_AFTER = [4, 9];
 
 type Props = {
@@ -29,16 +29,61 @@ type Props = {
   onNewSet: () => void;
 };
 
-/** 오늘의 세트 학습 경로. 다음 문항이 통통 튀고, 5문항마다 보물상자가 있다. */
+type Cell = { kind: "q"; index: number } | { kind: "chest"; after: number } | { kind: "trophy" };
+
+/** 폭에 맞춰 열 수를 정한다: 넓으면 6, 중간 5, 좁으면 4. */
+function useColumns() {
+  const ref = useRef<HTMLDivElement>(null);
+  const [cols, setCols] = useState(5);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const ro = new ResizeObserver(([e]) => {
+      const w = e.contentRect.width;
+      setCols(w >= 720 ? 6 : w >= 500 ? 5 : 4);
+    });
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+  return { ref, cols };
+}
+
+/** 오늘의 세트 학습 판: 보드게임처럼 줄마다 방향을 바꿔 한 화면에 들어간다. */
 export function PathHome({ set, results, practiced, openedChests, busy, onOpen, onChest, onNewSet }: Props) {
+  const { ref, cols } = useColumns();
   const isDone = (n: number) => Boolean(results[set.questions[n].number] || practiced[set.questions[n].number]);
   const doneCount = set.questions.filter((_, n) => isDone(n)).length;
   const nextIndex = set.questions.findIndex((_, n) => !isDone(n));
   const allDone = nextIndex === -1;
-  const offset = (n: number) => ({ "--x": `${Math.round(Math.sin(n * 0.85) * 110)}px` }) as CSSProperties;
+
+  const cells: Cell[] = [];
+  set.questions.forEach((_, n) => {
+    cells.push({ kind: "q", index: n });
+    if (CHEST_AFTER.includes(n)) cells.push({ kind: "chest", after: n });
+  });
+  cells.push({ kind: "trophy" });
+
+  const rows = Math.ceil(cells.length / cols);
+  // 뱀 모양 배치: 짝수 줄은 왼→오, 홀수 줄은 오→왼
+  const place = (k: number) => {
+    const row = Math.floor(k / cols);
+    const c = k % cols;
+    return { row, col: row % 2 === 0 ? c : cols - 1 - c };
+  };
+  const center = (k: number) => {
+    const { row, col } = place(k);
+    return [((col + 0.5) / cols) * 100, ((row + 0.5) / rows) * 100];
+  };
+  // 지나온 길: 마지막으로 끝낸 칸까지 보라색
+  const lastDoneCell = cells.reduce((acc, c, k) => (c.kind === "q" && isDone(c.index) ? k : acc), -1);
+  const points = (upTo: number) =>
+    cells
+      .slice(0, upTo + 1)
+      .map((_, k) => center(k).join(","))
+      .join(" ");
 
   return (
-    <div className="path-page">
+    <div className="board-page">
       <section className="unit-banner">
         <div className="unit-text">
           <p className="unit-kicker">오늘의 세트 · 목표 {set.expectedTargetLevel}</p>
@@ -52,87 +97,92 @@ export function PathHome({ set, results, practiced, openedChests, busy, onOpen, 
             </span>
           </div>
         </div>
-        <button className="btn btn-on-dark" onClick={onNewSet} disabled={busy} title="데일리 토큰 1개">
-          <Icon name="refresh" size={18} /> 새 세트
-          <span className="cost">
-            <Icon name="coin" size={16} />1
-          </span>
-        </button>
+        <div className="unit-side">
+          <div className="unit-talk">
+            <Mascot mood={allDone ? "happy" : doneCount === 0 ? "cheer" : "idle"} size={56} />
+            <p>{allDone ? "완주! 대단해요" : doneCount === 0 ? "연습은 무료! 마음껏 말해요" : `${set.questions.length - doneCount}문항 남았어요`}</p>
+          </div>
+          <button className="btn btn-on-dark" onClick={onNewSet} disabled={busy} title="데일리 토큰 1개">
+            <Icon name="refresh" size={18} /> 새 세트
+            <span className="cost">
+              <Icon name="coin" size={16} />1
+            </span>
+          </button>
+        </div>
       </section>
 
-      <div className="path-intro">
-        <Mascot mood={allDone ? "happy" : doneCount === 0 ? "cheer" : "idle"} size={84} />
-        <p className="talk-bubble small">
-          {allDone
-            ? "오늘의 세트 완주! 대단해요"
-            : doneCount === 0
-              ? "말하기 연습은 무료예요. 마음껏 말해 봐요!"
-              : `좋아요! ${set.questions.length - doneCount}문항 남았어요`}
-        </p>
-      </div>
+      <div className="board" ref={ref} style={{ gridTemplateColumns: `repeat(${cols}, 1fr)`, gridTemplateRows: `repeat(${rows}, 1fr)`, "--rows": rows, "--cols": cols } as CSSProperties}>
+        <svg className="board-trail" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+          <polyline points={points(cells.length - 1)} className="trail-todo" />
+          {lastDoneCell > 0 && <polyline points={points(lastDoneCell)} className="trail-done" />}
+        </svg>
 
-      <ol className="path" aria-label="오늘의 문항">
-        {set.questions.map((q, n) => {
+        {cells.map((cell, k) => {
+          const { row, col } = place(k);
+          const style = { gridRow: row + 1, gridColumn: col + 1, animationDelay: `${k * 35}ms` };
+
+          if (cell.kind === "trophy")
+            return (
+              <div key="trophy" className="cell" style={style}>
+                <span className={`trophy${allDone ? " earned" : ""}`} aria-label={allDone ? "완주" : "완주 보상"}>
+                  <Icon name="trophy" size={56} />
+                </span>
+                <span className="node-label">{allDone ? "완주!" : "완주"}</span>
+              </div>
+            );
+
+          if (cell.kind === "chest") {
+            const ready = set.questions.slice(0, cell.after + 1).every((_, n) => isDone(n));
+            const opened = openedChests.includes(cell.after);
+            return (
+              <div key={`chest-${cell.after}`} className="cell" style={style}>
+                <button
+                  className={`chest${ready ? " ready" : ""}${opened ? " opened" : ""}`}
+                  disabled={!ready || opened}
+                  onClick={() => onChest(cell.after)}
+                  aria-label={opened ? "열린 보물상자" : ready ? "보물상자 열기" : "잠긴 보물상자"}
+                >
+                  <Icon name={opened ? "sparkle" : "chest"} size={48} />
+                </button>
+                <span className="node-label">{opened ? "+15 XP" : ready ? "열기!" : "보물상자"}</span>
+              </div>
+            );
+          }
+
+          const q = set.questions[cell.index];
           const ai = results[q.number];
           const pr = practiced[q.number];
-          const current = n === nextIndex;
+          const current = cell.index === nextIndex;
           const section = SECTION[q.examSection] ?? SECTION.practice;
-          const chestHere = CHEST_AFTER.includes(n);
-          const chestReady = chestHere && set.questions.slice(0, n + 1).every((_, k) => isDone(k));
-          const chestOpened = openedChests.includes(n);
           return (
-            <Fragment key={q.number}>
-              <li className="path-step" style={offset(n)}>
-                {current && <span className="path-bubble">시작!</span>}
-                <button
-                  className={`node${ai ? " ai" : pr ? " practiced" : ""}${current ? " current" : ""}`}
-                  onClick={() => {
-                    play("select", { volume: 0.5 });
-                    onOpen(n);
-                  }}
-                  aria-label={`Q${q.number} ${section.label}${ai ? ` AI ${ai.predictedLevel}` : pr ? " 연습 완료" : ""}`}
-                >
-                  {ai || pr ? (
-                    <Icon name="check" size={34} className="node-check" />
-                  ) : (
-                    <Icon name={section.icon} size={34} />
-                  )}
-                  {ai && <span className="node-badge">{ai.predictedLevel}</span>}
-                  {!ai && pr && (
-                    <span className="node-stars" aria-hidden="true">
-                      {[0, 1, 2].map((k) => (
-                        <i key={k} className={k < pr.stars ? "on" : undefined} />
-                      ))}
-                    </span>
-                  )}
-                </button>
-                <span className="node-label">
-                  Q{q.number} · {section.label}
-                </span>
-              </li>
-              {chestHere && (
-                <li className="path-step" style={offset(n + 0.5)}>
-                  <button
-                    className={`chest${chestReady ? " ready" : ""}${chestOpened ? " opened" : ""}`}
-                    disabled={!chestReady || chestOpened}
-                    onClick={() => onChest(n)}
-                    aria-label={chestOpened ? "열린 보물상자" : chestReady ? "보물상자 열기" : "잠긴 보물상자"}
-                  >
-                    <Icon name={chestOpened ? "sparkle" : "chest"} size={56} />
-                  </button>
-                  <span className="node-label">{chestOpened ? "+15 XP 받음" : chestReady ? "열어 보세요!" : `Q${q.number}까지 하면 열려요`}</span>
-                </li>
-              )}
-            </Fragment>
+            <div key={q.number} className="cell" style={style}>
+              <button
+                className={`node${ai ? " ai" : pr ? " practiced" : ""}${current ? " current" : ""}`}
+                onClick={() => {
+                  play("select", { volume: 0.5 });
+                  onOpen(cell.index);
+                }}
+                aria-label={`Q${q.number} ${section.label}${ai ? ` AI ${ai.predictedLevel}` : pr ? " 연습 완료" : ""}`}
+              >
+                {ai || pr ? <Icon name="check" size={30} className="node-check" /> : <Icon name={section.icon} size={30} />}
+                {ai && <span className="node-badge">{ai.predictedLevel}</span>}
+                {current && <span className="node-start">시작</span>}
+              </button>
+              <span className="node-label">
+                Q{q.number}
+                {!ai && pr && (
+                  <span className="node-stars" aria-label={`별 ${pr.stars}개`}>
+                    {[0, 1, 2].map((s) => (
+                      <i key={s} className={s < pr.stars ? "on" : undefined} />
+                    ))}
+                  </span>
+                )}
+                {!pr && !ai && <small>{section.label}</small>}
+              </span>
+            </div>
           );
         })}
-        <li className="path-step" style={offset(0)}>
-          <span className={`trophy${allDone ? " earned" : ""}`} aria-label={allDone ? "완주" : "완주 보상"}>
-            <Icon name="trophy" size={72} />
-          </span>
-          <span className="node-label">{allDone ? "오늘의 세트 완주!" : "끝까지 가면 완주"}</span>
-        </li>
-      </ol>
+      </div>
     </div>
   );
 }

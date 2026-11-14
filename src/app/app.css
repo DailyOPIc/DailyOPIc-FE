@@ -2423,3 +2423,425 @@
     position: static;
   }
 }
+
+/* ═════════ 학습 판(한 화면에 들어가는 지그재그 보드) ═════════ */
+.board-page {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  height: 100vh;
+  height: 100dvh;
+  max-width: 980px;
+  margin: 0 auto;
+  padding: 20px 20px 16px;
+}
+.board-page .unit-banner {
+  position: static;
+  flex-shrink: 0;
+  flex-wrap: wrap;
+}
+.unit-side {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+.unit-talk {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.unit-talk .mascot {
+  filter: drop-shadow(0 2px 0 rgba(0, 0, 0, 0.15));
+}
+.unit-talk p {
+  margin: 0;
+  max-width: 11em;
+  padding: 8px 12px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.16);
+  font-size: 14px;
+  font-weight: 800;
+  line-height: 1.35;
+}
+.board {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  gap: 4px 8px;
+}
+.board-trail {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  overflow: visible;
+}
+.board-trail polyline {
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  vector-effect: non-scaling-stroke;
+}
+.trail-todo {
+  stroke: #e3dff0;
+  stroke-width: 10;
+  stroke-dasharray: 2 16;
+}
+.trail-done {
+  stroke: #cfc3ff;
+  stroke-width: 10;
+}
+.cell {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 0;
+  animation: cell-in 0.45s var(--ease-out) both;
+}
+@keyframes cell-in {
+  from { opacity: 0; transform: translateY(14px) scale(0.85); }
+}
+.cell .node {
+  width: clamp(54px, 8.5vh, 78px);
+  height: clamp(50px, 8vh, 72px);
+  flex-shrink: 0;
+}
+.cell .chest {
+  width: clamp(54px, 8.5vh, 78px);
+  height: clamp(54px, 8.5vh, 78px);
+  border-radius: 20px;
+}
+.cell .trophy .ico,
+.cell .chest .ico {
+  width: clamp(40px, 6.5vh, 56px);
+  height: clamp(40px, 6.5vh, 56px);
+}
+.node-start {
+  position: absolute;
+  top: -12px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 2px 10px;
+  border-radius: 999px;
+  background: var(--primary);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 900;
+  white-space: nowrap;
+  box-shadow: 0 2px 0 var(--primary-deep);
+  animation: node-bob 1.6s ease-in-out infinite;
+}
+.cell .node-label {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  max-width: 100%;
+  font-size: 13px;
+  font-weight: 800;
+  white-space: nowrap;
+  background: #fff;
+  padding: 0 6px;
+  border-radius: 8px;
+}
+.cell .node-label small {
+  font-size: 11px;
+  font-weight: 700;
+  color: #9a96b2;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.cell .node-stars {
+  position: static;
+  display: inline-flex;
+  gap: 1px;
+}
+.cell .node-stars i {
+  width: 11px;
+  height: 11px;
+}
+.cell .node-badge {
+  right: -14px;
+  top: -8px;
+}
+/* 작은 화면: 상하단 바를 뺀 높이에 맞춘다 */
+@media (max-width: 760px) {
+  .board-page {
+    height: calc(100dvh - 60px - 76px);
+    padding: 12px 14px 10px;
+    gap: 10px;
+  }
+  .board-page .unit-banner {
+    padding: 14px 16px;
+    gap: 10px;
+  }
+  .board-page .unit-banner h1 {
+    font-size: 18px;
+  }
+  .unit-side {
+    width: 100%;
+    justify-content: space-between;
+  }
+  .unit-talk p {
+    font-size: 13px;
+  }
+  .cell .node-label small {
+    display: none;
+  }
+}
+@media (max-width: 760px) and (max-height: 700px) {
+  .unit-talk {
+    display: none;
+  }
+}
+
+/* ═════════ 문항 · 게임 화면: 화면 높이에 딱 맞추고, 넘칠 때만 가운데만 스크롤 ═════════ */
+.lesson {
+  height: 100vh;
+  height: 100dvh;
+  min-height: 0;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  overflow: hidden;
+}
+.app .lesson {
+  overflow: hidden;
+}
+.lesson-body {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 12px 20px 24px;
+  overscroll-behavior: contain;
+}
+.lesson-body.center {
+  align-items: center;
+  justify-content: center;
+}
+.lesson .mic-stage {
+  flex: 1;
+  justify-content: center;
+  align-content: center;
+  margin-top: 16px;
+  min-height: 200px;
+}
+.lesson-bar {
+  position: relative;
+  left: auto;
+  right: auto;
+  bottom: auto;
+}
+.lesson-top {
+  padding-top: 16px;
+}
+.talk-row {
+  flex-shrink: 0;
+}
+.prompt-row {
+  flex-shrink: 0;
+}
+@media (max-height: 760px) {
+  .lesson .talk-row .mascot {
+    width: 64px;
+    height: auto;
+  }
+  .lesson .big-mic {
+    width: 112px;
+    height: 112px;
+  }
+  .lesson .mic-stage {
+    min-height: 170px;
+  }
+}
+.rain-game {
+  grid-template-rows: auto auto minmax(0, 1fr);
+}
+
+/* 노드 크기 = 판 칸 크기에 맞춤(화면 높이가 아니라 실제 칸) */
+.board {
+  container-type: size;
+}
+.cell .node,
+.cell .chest {
+  --s: min(78px, calc(100cqh / var(--rows) - 38px), calc(100cqw / var(--cols) - 22px));
+  width: var(--s);
+  height: calc(var(--s) * 0.93);
+}
+.cell .chest {
+  height: var(--s);
+}
+.cell .node .ico {
+  width: calc(var(--s) * 0.42);
+  height: calc(var(--s) * 0.42);
+}
+.cell .trophy .ico,
+.cell .chest .ico {
+  width: min(56px, calc(100cqh / var(--rows) - 40px));
+  height: min(56px, calc(100cqh / var(--rows) - 40px));
+}
+
+/* 단어 게임 목록: 한 화면에 */
+.mode-page {
+  padding-bottom: 32px;
+}
+.mode-hero .mascot {
+  width: 96px;
+  height: auto;
+}
+.mode-grid {
+  margin-top: 20px;
+  gap: 12px;
+}
+.mode-card {
+  padding: 18px;
+}
+.mode-icon {
+  width: 56px;
+  height: 56px;
+}
+.expr-shelf {
+  margin-top: 24px;
+}
+.expr-list {
+  grid-template-columns: repeat(3, 1fr);
+}
+
+/* 휴대폰: 상단 바 · 내용 · 탭바를 한 화면 높이로 */
+@media (max-width: 760px) {
+  .app {
+    display: flex;
+    flex-direction: column;
+    height: 100dvh;
+  }
+  .app-topbar {
+    position: relative;
+    flex-shrink: 0;
+  }
+  .app-main {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    padding-bottom: 0;
+  }
+  .tabbar {
+    position: relative;
+    flex-shrink: 0;
+  }
+  .board-page {
+    height: 100%;
+  }
+  .mode-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+  .mode-card {
+    padding: 14px;
+    gap: 4px;
+  }
+  .mode-card > span:not(.mode-icon):not(.mode-tag) {
+    display: none;
+  }
+  .mode-card strong {
+    font-size: 17px;
+  }
+  .mode-icon {
+    width: 48px;
+    height: 48px;
+  }
+  .mode-icon .ico {
+    width: 36px;
+    height: 36px;
+  }
+  .mode-tag {
+    top: 12px;
+    right: 12px;
+  }
+  .mode-hero {
+    flex-direction: row;
+    align-items: center;
+  }
+  .mode-hero .mascot {
+    width: 64px;
+  }
+  .mode-hero h1 {
+    font-size: 26px;
+  }
+  .mode-hero .lead {
+    font-size: 14px;
+    margin-top: 4px;
+  }
+  .expr-list {
+    grid-template-columns: 1fr;
+  }
+  .dice-card {
+    margin-top: 20px;
+    padding: 28px 16px;
+  }
+}
+
+/* 탭할 수 있는 최소 크기(46px). 이보다 작아져야 하면 판을 스크롤한다. */
+.cell .node,
+.cell .chest {
+  --s: max(46px, min(78px, calc(100cqh / var(--rows) - 38px), calc(100cqw / var(--cols) - 22px)));
+}
+.board {
+  min-height: calc(var(--rows) * 86px);
+}
+.mode-page {
+  padding-top: 18px;
+}
+@media (max-width: 760px) {
+  .board-page {
+    height: auto;
+    min-height: 100%;
+  }
+  .board {
+    flex: 1;
+  }
+  .unit-side .btn {
+    min-height: 40px;
+    padding: 0 14px;
+    font-size: 14px;
+  }
+  .expr-list {
+    display: flex;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    padding-bottom: 6px;
+  }
+  .expr-chip {
+    flex: 0 0 78%;
+    scroll-snap-align: start;
+  }
+  .expr-shelf h2 {
+    font-size: 16px;
+    margin-bottom: 8px;
+  }
+  .expr-shelf {
+    margin-top: 16px;
+  }
+}
+@media (max-width: 760px) and (max-height: 860px) {
+  .unit-talk {
+    display: none;
+  }
+}
+@media (max-width: 760px) {
+  /* 판이 남은 높이를 다 쓰고, 정말 모자랄 때만(min-height) 넘쳐서 스크롤 */
+  .board-page {
+    height: 100%;
+  }
+}
+.cell .trophy .ico,
+.cell .chest .ico {
+  width: max(32px, min(56px, calc(100cqh / var(--rows) - 40px), calc(100cqw / var(--cols) - 36px)));
+  height: max(32px, min(56px, calc(100cqh / var(--rows) - 40px), calc(100cqw / var(--cols) - 36px)));
+}
+@media (max-width: 760px) {
+  .board-page {
+    padding: 10px 14px 6px;
+  }
+}
