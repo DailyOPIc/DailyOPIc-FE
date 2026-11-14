@@ -2,22 +2,31 @@ import { useEffect, useMemo, useState } from "react";
 import { Icon } from "../assets/Icon";
 import { Mascot } from "../assets/Mascot";
 import { PROMPTS, STYLE_LABEL, type Prompt } from "../data/prompts";
+import { rng, seededShuffle, todaySeed } from "../lib/challenge";
 import { XP, type Recorded } from "../lib/game";
+import { consume, FREE_DAILY, remaining } from "../lib/limits";
 import type { StudyPrefs } from "../lib/prefs";
 import { quickCheck, type QuickCheck } from "../lib/quickcheck";
 import { speak, speechSupported, useAnswerRecorder } from "../lib/recorder";
 import { play } from "../lib/sfx";
+import { LimitReached } from "./LimitReached";
 import { Confetti, QuickCheckCard, RewardChips } from "./Reward";
 
 type Phase = "pick" | "rolling" | "ready" | "recording" | "checked";
 
 /** 무료 랜덤 스피킹: 내 설문 주제에서 문제를 뽑아 무제한으로 말하기 연습(AI 분석 없음, 토큰 0). */
-export function RandomSpeak({ prefs, onReward }: { prefs: StudyPrefs; onReward: (xp: number) => Recorded }) {
+type Props = { uid: string; plan: string; prefs: StudyPrefs; onReward: (xp: number) => Recorded; onLimitUse: () => void };
+
+export function RandomSpeak({ uid, plan, prefs, onReward, onLimitUse }: Props) {
   const pool = useMemo(() => {
     const mine = new Set([...prefs.survey.leisure, ...prefs.survey.hobbies, ...prefs.survey.sports, ...prefs.survey.travel, "home", "any"]);
     const list = PROMPTS.filter((p) => mine.has(p.topic));
-    return list.length >= 6 ? list : PROMPTS;
+    // 오늘의 문제 순서: 날짜(한국)로 섞어서 매일 바뀐다
+    return seededShuffle(list.length >= 6 ? list : PROMPTS, rng(todaySeed()));
   }, [prefs]);
+  const [drawn, setDrawn] = useState(0);
+  const [blocked, setBlocked] = useState(false);
+  const left = remaining(uid, plan, "speak");
   const [phase, setPhase] = useState<Phase>("pick");
   const [prompt, setPrompt] = useState<Prompt | null>(null);
   const [rollFace, setRollFace] = useState<Prompt | null>(null);
@@ -28,6 +37,13 @@ export function RandomSpeak({ prefs, onReward }: { prefs: StudyPrefs; onReward: 
   const recorder = useAnswerRecorder();
 
   const roll = () => {
+    // 새 문제를 뽑을 때 하루 한도를 쓴다(같은 문제 다시 말하기는 무료)
+    if (!consume(uid, plan, "speak")) {
+      play("lose");
+      setBlocked(true);
+      return;
+    }
+    onLimitUse();
     play("start");
     setPhase("rolling");
     setCheck(null);
@@ -38,7 +54,8 @@ export function RandomSpeak({ prefs, onReward }: { prefs: StudyPrefs; onReward: 
       play("key", { rate: 1 + n * 0.05, volume: 0.4 });
       if (++n >= 9) {
         window.clearInterval(id);
-        const pick = pool.filter((p) => p !== prompt)[Math.floor(Math.random() * (pool.length - 1))] ?? pool[0];
+        const pick = pool[drawn % pool.length];
+        setDrawn((d) => d + 1);
         setPrompt(pick);
         setRollFace(null);
         play("select");
@@ -75,6 +92,8 @@ export function RandomSpeak({ prefs, onReward }: { prefs: StudyPrefs; onReward: 
     setPhase("recording");
   };
 
+  if (blocked) return <LimitReached kind="speak" onBack={() => setBlocked(false)} />;
+
   if (phase === "pick")
     return (
       <div className="mode-page">
@@ -89,7 +108,7 @@ export function RandomSpeak({ prefs, onReward }: { prefs: StudyPrefs; onReward: 
         <button className="dice-card" onClick={roll}>
           <Icon name="dice" size={64} className="dice-spin" />
           <strong>문제 뽑기</strong>
-          <span>{pool.length}개 질문 중 하나</span>
+          <span>{Number.isFinite(left) ? `오늘 남은 문제 ${left} / ${FREE_DAILY.speak}` : "무제한"}</span>
         </button>
       </div>
     );
@@ -98,7 +117,7 @@ export function RandomSpeak({ prefs, onReward }: { prefs: StudyPrefs; onReward: 
     <div className="mode-page">
       <div className="mode-top">
         <span className="pill-count">
-          <Icon name="mic" size={20} /> 오늘 {count}개 말함
+          <Icon name="mic" size={20} /> 오늘 {count}개 말함{Number.isFinite(left) ? ` · 남은 문제 ${left}` : ""}
         </span>
         <button className="btn btn-ghost" onClick={roll} disabled={phase === "rolling" || phase === "recording"}>
           <Icon name="shuffle" size={18} /> 다른 문제

@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type CSSProperties } from "react";
+import { useLayoutEffect, useRef, useState, type CSSProperties } from "react";
 import { Icon, type IconName } from "../assets/Icon";
 import { Mascot } from "../assets/Mascot";
 import type { Evaluation, QuestionSet } from "../lib/api";
@@ -31,17 +31,17 @@ type Props = {
 
 type Cell = { kind: "q"; index: number } | { kind: "chest"; after: number } | { kind: "trophy" };
 
-/** 폭에 맞춰 열 수를 정한다: 넓으면 6, 중간 5, 좁으면 4. */
+/** 폭에 맞춰 열 수를 정한다: 넓으면 6, 중간 5, 좁으면 4, 아주 좁으면(320px 폰) 3. */
 function useColumns() {
   const ref = useRef<HTMLDivElement>(null);
   const [cols, setCols] = useState(5);
-  useEffect(() => {
+  // 첫 그리기 전에 한 번 재서 깜빡임 없이 시작하고, 이후 크기 변화는 ResizeObserver로
+  useLayoutEffect(() => {
     const el = ref.current;
     if (!el) return;
-    const ro = new ResizeObserver(([e]) => {
-      const w = e.contentRect.width;
-      setCols(w >= 720 ? 6 : w >= 500 ? 5 : 4);
-    });
+    const pick = (w: number) => setCols(w >= 720 ? 6 : w >= 500 ? 5 : w >= 300 ? 4 : 3);
+    pick(el.clientWidth);
+    const ro = new ResizeObserver(([e]) => pick(e.contentRect.width));
     ro.observe(el);
     return () => ro.disconnect();
   }, []);
@@ -102,7 +102,7 @@ export function PathHome({ set, results, practiced, openedChests, busy, onOpen, 
             <Mascot mood={allDone ? "happy" : doneCount === 0 ? "cheer" : "idle"} size={56} />
             <p>{allDone ? "완주! 대단해요" : doneCount === 0 ? "연습은 무료! 마음껏 말해요" : `${set.questions.length - doneCount}문항 남았어요`}</p>
           </div>
-          <button className="btn btn-on-dark" onClick={onNewSet} disabled={busy} title="데일리 토큰 1개">
+          <button className="btn btn-on-dark" onClick={onNewSet} disabled={busy} aria-label="새 세트 받기, 데일리 토큰 1개">
             <Icon name="refresh" size={18} /> 새 세트
             <span className="cost">
               <Icon name="coin" size={16} />1
@@ -111,7 +111,7 @@ export function PathHome({ set, results, practiced, openedChests, busy, onOpen, 
         </div>
       </section>
 
-      <div className="board" ref={ref} style={{ gridTemplateColumns: `repeat(${cols}, 1fr)`, gridTemplateRows: `repeat(${rows}, 1fr)`, "--rows": rows, "--cols": cols } as CSSProperties}>
+      <div className="board" ref={ref} style={{ gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))`, gridTemplateRows: `repeat(${rows}, minmax(0, 1fr))`, "--rows": rows, "--cols": cols } as CSSProperties}>
         <svg className="board-trail" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
           <polyline points={points(cells.length - 1)} className="trail-todo" />
           {lastDoneCell > 0 && <polyline points={points(lastDoneCell)} className="trail-done" />}

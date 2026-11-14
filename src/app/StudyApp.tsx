@@ -38,8 +38,10 @@ const K = {
 
 export function StudyApp() {
   const { user, ready } = useAuth();
+  const location = useLocation();
   if (!ready) return <Splash text="불러오는 중…" />;
-  if (!user) return <Navigate to="/login?next=/study" replace />;
+  // 도전장 링크(?vs=)로 들어와도 로그인 후 같은 링크로 돌아온다
+  if (!user) return <Navigate to={`/login?next=${encodeURIComponent(location.pathname + location.search)}`} replace />;
   return <Study uid={user.uid} />;
 }
 
@@ -57,6 +59,8 @@ function Study({ uid }: { uid: string }) {
   const [game, setGame] = useState<GameState>(() => loadGame(uid));
   const [lesson, setLesson] = useState<number | null>(null);
   const [busy, setBusy] = useState(false);
+  const [, setLimitTick] = useState(0);
+  const onLimitUse = useCallback(() => setLimitTick((t) => t + 1), []);
   const [error, setError] = useState<string | null>(null);
 
   const tokens = usage ? usage.freeRemaining + usage.bonusRemaining : null;
@@ -69,6 +73,11 @@ function Study({ uid }: { uid: string }) {
     },
     [uid],
   );
+
+  // 플랜은 단계 · 설문과 상관없이 늘 필요하다(무료 한도 판단)
+  useEffect(() => {
+    api.capabilities().then((c) => setPlan(c.plan)).catch(() => {});
+  }, []);
 
   useEffect(() => {
     // 첫 입력 때 효과음을 미리 풀어 둔다(브라우저 자동 재생 정책)
@@ -108,7 +117,8 @@ function Study({ uid }: { uid: string }) {
     };
   }, [prefs]);
 
-  if (!prefs || editing)
+  // 단어 게임은 단계 · 설문이 필요 없다(도전장으로 처음 온 사람도 바로 대결)
+  if ((!prefs && view !== "words") || editing)
     return (
       <Onboarding
         initial={prefs}
@@ -161,6 +171,7 @@ function Study({ uid }: { uid: string }) {
     if (!window.confirm("데일리 토큰 1개를 써서 새 문제 세트를 받을까요?")) return;
     setBusy(true);
     try {
+      if (!prefs) return;
       applySet(await api.refreshSet({ initialLevel: prefs.initialLevel, survey: prefs.survey }, crypto.randomUUID()));
       play("start");
     } catch (e) {
@@ -174,8 +185,8 @@ function Study({ uid }: { uid: string }) {
   };
 
   let content: ReactNode;
-  if (view === "speak") content = <RandomSpeak prefs={prefs} onReward={reward} />;
-  else if (view === "words") content = <WordGames onReward={reward} />;
+  if (view === "speak" && prefs) content = <RandomSpeak uid={uid} plan={plan} prefs={prefs} onReward={reward} onLimitUse={onLimitUse} />;
+  else if (view === "words") content = <WordGames uid={uid} plan={plan} onReward={reward} onLimitUse={onLimitUse} />;
   else if (set)
     content = (
       <PathHome
@@ -207,7 +218,7 @@ function Study({ uid }: { uid: string }) {
 
   // 단어 게임 · 랜덤 스피킹 진행 화면은 각자 전체 화면을 쓰므로 틀 안에서도 그대로 보인다.
   return (
-    <AppShell game={game} tokens={tokens} plan={plan} onEditPrefs={() => setEditing(true)}>
+    <AppShell uid={uid} game={game} tokens={tokens} plan={plan} onEditPrefs={() => setEditing(true)}>
       {content}
     </AppShell>
   );

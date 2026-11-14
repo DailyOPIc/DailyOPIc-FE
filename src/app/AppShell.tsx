@@ -4,9 +4,11 @@ import { Icon, type IconName } from "../assets/Icon";
 import { Mascot } from "../assets/Mascot";
 import { signOut } from "../lib/auth";
 import { DAILY_GOAL, type GameState } from "../lib/game";
+import { FREE_DAILY, LIMIT_LABEL, used, type LimitKind } from "../lib/limits";
 import { isMuted, play, setMuted } from "../lib/sfx";
 
 type Props = {
+  uid: string;
   game: GameState;
   tokens: number | null;
   plan: string;
@@ -21,7 +23,7 @@ const NAV: { to: string; label: string; icon: IconName; end?: boolean }[] = [
 ];
 
 /** 서비스 화면 틀: 사이트 헤더 · 푸터 없이 왼쪽 레일 + 가운데 학습 + 오른쪽 현황 */
-export function AppShell({ game, tokens, plan, onEditPrefs, children }: Props) {
+export function AppShell({ uid, game, tokens, plan, onEditPrefs, children }: Props) {
   const [menu, setMenu] = useState(false);
   const [muted, setMute] = useState(isMuted);
 
@@ -102,6 +104,7 @@ export function AppShell({ game, tokens, plan, onEditPrefs, children }: Props) {
       <aside className="side">
         <Stats game={game} tokens={tokens} />
         <GoalCard game={game} />
+        {plan === "free" && <FreeLimits uid={uid} />}
         {plan === "free" && (
           <div className="side-card upsell">
             <Mascot mood="cheer" size={64} />
@@ -163,6 +166,30 @@ export function GoalCard({ game }: { game: GameState }) {
           {done >= DAILY_GOAL ? " · 달성!" : ""}
         </p>
       </div>
+    </div>
+  );
+}
+
+function FreeLimits({ uid }: { uid: string }) {
+  const kinds: LimitKind[] = ["speak", "games"];
+  return (
+    <div className="side-card limits">
+      <strong>오늘의 무료 이용</strong>
+      {kinds.map((k) => {
+        const u = Math.min(used(uid, k), FREE_DAILY[k]);
+        return (
+          <div key={k} className="limit-row">
+            <span>{LIMIT_LABEL[k]}</span>
+            <span className="limit-track">
+              <span style={{ transform: `scaleX(${u / FREE_DAILY[k]})` }} className={u >= FREE_DAILY[k] ? "full" : undefined} />
+            </span>
+            <b>
+              {FREE_DAILY[k] - u}/{FREE_DAILY[k]}
+            </b>
+          </div>
+        );
+      })}
+      <p>매일 자정에 다시 채워져요</p>
     </div>
   );
 }

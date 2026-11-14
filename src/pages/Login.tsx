@@ -7,7 +7,9 @@ import { signInWithApple, signInWithGoogle, useAuth } from "../lib/auth";
 export function Login() {
   const { user, ready } = useAuth();
   const location = useLocation();
-  const next = new URLSearchParams(location.search).get("next") || "/study";
+  // 같은 사이트 안의 경로만 허용(외부 주소로 튕기는 오픈 리다이렉트 방지)
+  const rawNext = new URLSearchParams(location.search).get("next") || "/study";
+  const next = rawNext.startsWith("/") && !rawNext.startsWith("//") ? rawNext : "/study";
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
@@ -49,6 +51,7 @@ export function Login() {
       </Link>
 
       <div className="login-inner">
+        {next.includes("vs=") && <p className="login-challenge">친구가 보낸 도전장이 기다리고 있어요! 로그인하고 바로 대결해요</p>}
         <p className="login-kicker">매일 말하는 연습이 등급을 만드는</p>
         <h1 className="login-title">
           AI 스피킹 루틴 <span>데일리오픽</span>

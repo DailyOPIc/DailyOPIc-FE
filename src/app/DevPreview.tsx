@@ -66,11 +66,11 @@ export function DevPreview() {
       />
     );
   return (
-    <AppShell game={GAME} tokens={1} plan="free" onEditPrefs={() => {}}>
+    <AppShell uid="dev" game={GAME} tokens={1} plan={new URLSearchParams(window.location.search).get("plan") ?? "free"} onEditPrefs={() => {}}>
       {view === "words" ? (
-        <WordGames onReward={() => REWARD} />
+        <WordGames uid="dev" plan={new URLSearchParams(window.location.search).get("plan") ?? "free"} onReward={() => REWARD} onLimitUse={() => {}} />
       ) : view === "speak" ? (
-        <RandomSpeak prefs={{ initialLevel: 5, survey: { status: "student", residence: "family", leisure: ["movies", "cafes"], hobbies: [], sports: ["jogging"], travel: [] } }} onReward={() => REWARD} />
+        <RandomSpeak uid="dev" plan={new URLSearchParams(window.location.search).get("plan") ?? "free"} prefs={{ initialLevel: 5, survey: { status: "student", residence: "family", leisure: ["movies", "cafes"], hobbies: [], sports: ["jogging"], travel: [] } }} onReward={() => REWARD} onLimitUse={() => {}} />
       ) : (
         <PathHome set={SET} results={results} practiced={{ 4: QC, 5: { ...QC, stars: 1 } }} openedChests={[]} busy={false} onOpen={() => {}} onChest={() => {}} onNewSet={() => {}} />
       )}
