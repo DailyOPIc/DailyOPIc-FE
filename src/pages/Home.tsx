@@ -118,9 +118,6 @@ export function Home() {
             <LogoBuild className="logo-inline" />
             준비하는 <span className="accent">OPIc</span>
           </span>
-          <span className="float-chip chip-a" aria-hidden="true">
-            <b>IH</b> 예상 등급
-          </span>
         </h1>
 
         <div className="wide hero-foot">

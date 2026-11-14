@@ -1014,33 +1014,6 @@ h3 {
   100% { transform: scale(1.35); opacity: 0; }
 }
 
-.float-chip {
-  position: absolute;
-  z-index: 2;
-  padding: 10px 16px;
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.82);
-  backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.9);
-  box-shadow: 0 12px 30px -12px rgba(75, 36, 255, 0.35);
-  font-weight: 700;
-  font-size: 15px;
-  white-space: nowrap;
-  opacity: 0;
-  animation: pop 0.6s var(--ease-out) forwards, bob 5s ease-in-out infinite;
-}
-.float-chip b {
-  color: var(--primary);
-  margin-right: 4px;
-}
-@keyframes pop {
-  from { opacity: 0; transform: translateY(12px) scale(0.9); }
-  to { opacity: 1; transform: none; }
-}
-@keyframes bob {
-  0%, 100% { translate: 0 0; }
-  50% { translate: 0 -8px; }
-}
 
 /* 큰 워드마크: 글자가 아래에서 차례로 올라와 완성된다 */
 .wordmark {
@@ -1380,7 +1353,7 @@ h3 {
 
 @media (prefers-reduced-motion: reduce) {
   .stroke { stroke-dashoffset: 0; }
-  .float-chip, .fb span { opacity: 1; transform: none; }
+  .fb span { opacity: 1; transform: none; }
   .wordmark-letters span { opacity: 1; transform: none; }
   .bar span { transform: none; }
   .grade-roll { transform: translateY(-256px); }
@@ -1504,14 +1477,6 @@ h3 {
   inset: -8%;
 }
 
-/* 떠다니는 칩: 히어로 전체에 흩어 둔다 */
-/* 1줄은 왼쪽, 2줄은 오른쪽 정렬이라 1줄 오른편 · 2줄 왼편이 비어 있다 */
-.hero-title .float-chip {
-  font-size: 15px;
-  letter-spacing: 0;
-  line-height: 1.4;
-}
-
 .hero-foot {
   position: relative;
   display: flex;
@@ -1569,9 +1534,6 @@ h3 {
   color: var(--ink-2);
 }
 
-@media (max-width: 1280px) {
-  .hero-title .float-chip { display: none; }
-}
 @media (max-width: 880px) {
   .stats { grid-template-columns: 1fr; }
   .stat + .stat { border-left: 0; border-top: 1px solid var(--line); }
