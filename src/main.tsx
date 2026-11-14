@@ -11,6 +11,7 @@ import { NotFound } from "./pages/NotFound";
 import { Login } from "./pages/Login";
 import { StudyApp } from "./app/StudyApp";
 import { DevPreview } from "./app/DevPreview";
+import { DevAssets } from "./app/DevAssets";
 import { AuthProvider } from "./lib/auth";
 import "./styles.css";
 
@@ -108,6 +109,7 @@ createRoot(document.getElementById("root")!).render(
           <Route path="/login" element={<Login />} />
           <Route path="/study" element={<StudyApp />} />
           {import.meta.env.DEV && <Route path="/dev/study" element={<DevPreview />} />}
+          {import.meta.env.DEV && <Route path="/dev/assets" element={<DevAssets />} />}
           <Route path="*" element={<NotFound />} />
         </Routes>
       </SiteChrome>

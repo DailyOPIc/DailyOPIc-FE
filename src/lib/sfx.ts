@@ -1,5 +1,10 @@
-// 효과음: 파일 없이 Web Audio로 짧게 합성한다. 끄기 설정은 기기에 저장.
+// 효과음: public/sfx/*.mp3(scripts/make_sfx.py로 직접 합성)를 Web Audio로 미리 풀어 두고 지연 없이 재생.
+const NAMES = ["tap", "select", "correct", "wrong", "coin", "combo", "fanfare", "streak", "rec_start", "rec_stop", "key", "lose", "start"] as const;
+export type Sfx = (typeof NAMES)[number];
+
 let ctx: AudioContext | null = null;
+const buffers = new Map<Sfx, AudioBuffer>();
+let loading: Promise<void> | null = null;
 const MUTE_KEY = "dailyopic:muted";
 
 export function isMuted() {
@@ -18,32 +23,51 @@ export function setMuted(muted: boolean) {
   }
 }
 
-function tone(freq: number, start: number, dur: number, type: OscillatorType = "sine", gain = 0.12) {
-  if (!ctx) return;
-  const osc = ctx.createOscillator();
-  const g = ctx.createGain();
-  osc.type = type;
-  osc.frequency.value = freq;
-  g.gain.setValueAtTime(0, ctx.currentTime + start);
-  g.gain.linearRampToValueAtTime(gain, ctx.currentTime + start + 0.01);
-  g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + start + dur);
-  osc.connect(g).connect(ctx.destination);
-  osc.start(ctx.currentTime + start);
-  osc.stop(ctx.currentTime + start + dur + 0.02);
-}
-
-function play(notes: [number, number, number, OscillatorType?][]) {
-  if (isMuted()) return;
+function load() {
+  if (loading) return loading;
   ctx ??= new AudioContext();
-  if (ctx.state === "suspended") void ctx.resume();
-  for (const [f, s, d, t] of notes) tone(f, s, d, t);
+  const c = ctx;
+  loading = Promise.all(
+    NAMES.map(async (name) => {
+      try {
+        const res = await fetch(`/sfx/${name}.mp3`);
+        buffers.set(name, await c.decodeAudioData(await res.arrayBuffer()));
+      } catch {
+        /* 소리 하나 실패해도 앱은 계속 */
+      }
+    }),
+  ).then(() => undefined);
+  return loading;
 }
 
+/** rate>1이면 음이 높아진다(콤보가 쌓일수록 올라가게). */
+export function play(name: Sfx, { rate = 1, volume = 0.7 } = {}) {
+  if (isMuted()) return;
+  void load();
+  if (!ctx) return;
+  if (ctx.state === "suspended") void ctx.resume();
+  const buffer = buffers.get(name);
+  if (!buffer) return;
+  const src = ctx.createBufferSource();
+  const gain = ctx.createGain();
+  src.buffer = buffer;
+  src.playbackRate.value = rate;
+  gain.gain.value = volume;
+  src.connect(gain).connect(ctx.destination);
+  src.start();
+}
+
+/** 첫 사용자 입력 때 불러 두면 이후 재생이 즉시 된다. */
+export function warmUp() {
+  void load();
+}
+
+// 기존 화면 호환(짧은 이름)
 export const sfx = {
-  tap: () => play([[660, 0, 0.06, "triangle"]]),
-  start: () => play([[523, 0, 0.08], [784, 0.08, 0.12]]),
-  stop: () => play([[784, 0, 0.08], [523, 0.08, 0.12]]),
-  success: () => play([[523, 0, 0.12], [659, 0.1, 0.12], [784, 0.2, 0.22]]),
-  goal: () => play([[523, 0, 0.1], [659, 0.1, 0.1], [784, 0.2, 0.1], [1047, 0.3, 0.35]]),
-  error: () => play([[220, 0, 0.18, "square"]]),
+  tap: () => play("tap", { volume: 0.5 }),
+  start: () => play("rec_start"),
+  stop: () => play("rec_stop"),
+  success: () => play("correct"),
+  goal: () => play("fanfare"),
+  error: () => play("wrong", { volume: 0.5 }),
 };
