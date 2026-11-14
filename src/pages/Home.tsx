@@ -2,7 +2,6 @@ import type { CSSProperties, ReactNode } from "react";
 import { Link } from "react-router-dom";
 import { AppStoreButton, Marquee } from "../components/Bits";
 import { AnalysisDemo, BoardDemo, CountUp, GamesDemo, LogoBuild, QuestionDemo, VersusDemo, VoicePill } from "../components/Demos";
-import { Mascot } from "../assets/Mascot";
 import { Icon, type IconName } from "../assets/Icon";
 import { FREE_DAILY } from "../lib/limits";
 import { REVIEWS, type Review } from "../site";
@@ -114,9 +113,6 @@ export function Home() {
         <h1 className="hero-title">
           <span className="hl hl-1">
             매일 <VoicePill /> 말하며
-            <span className="hero-mascot" aria-hidden="true">
-              <Mascot mood="cheer" size={140} />
-            </span>
           </span>
           <span className="hl hl-2">
             <LogoBuild className="logo-inline" />
@@ -124,9 +120,6 @@ export function Home() {
           </span>
           <span className="float-chip chip-a" aria-hidden="true">
             <b>IH</b> 예상 등급
-          </span>
-          <span className="float-chip chip-b" aria-hidden="true">
-            <Icon name="soundOn" size={18} /> 질문 듣기
           </span>
         </h1>
 

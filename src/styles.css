@@ -1954,24 +1954,7 @@ h3 {
   box-shadow: none;
   font-weight: 800;
 }
-.hero-mascot {
-  display: inline-block;
-  width: 0.95em;
-  height: 0.95em;
-  margin-left: 0.08em;
-  animation: mascot-in 0.9s var(--ease-out) 0.5s both;
-}
-.hero-mascot .mascot {
-  width: 100%;
-  height: auto;
-}
-@keyframes mascot-in {
-  from { opacity: 0; transform: translateY(40%) rotate(-12deg) scale(0.6); }
-}
 @media (max-width: 700px) {
-  .hero-mascot {
-    display: none;
-  }
   .hero-cta .chunky {
     flex: 1 1 100%;
   }
