@@ -27,6 +27,25 @@ function ScrollToTop() {
 const SITE = "https://www.dailyopic.link";
 const PUBLIC_PATHS = ["/", "/membership", "/help", "/privacy"];
 
+// 페이지별 제목 · 설명(검색 결과와 브라우저 탭에 보인다)
+const BRAND = "데일리오픽";
+const PAGES: Record<string, { title: string; description?: string }> = {
+  "/": {
+    title: "데일리오픽 · 매일 말하며 준비하는 OPIc",
+    description: "매일 받는 OPIc 문제에 직접 말하고, AI가 예상 등급과 개선점을 바로 알려주는 스피킹 학습 서비스.",
+  },
+  "/membership": {
+    title: `요금제 · ${BRAND}`,
+    description: "무료 · 베이직 · 플러스 · 프로. 데일리 토큰과 AI 분석, 모의고사 횟수를 비교해 보세요.",
+  },
+  "/help": { title: `고객센터 · ${BRAND}`, description: "데일리 토큰, 구독 해지 · 환불, 녹음 문제 등 자주 묻는 질문과 문의 방법." },
+  "/privacy": { title: `개인정보처리방침 · ${BRAND}`, description: "데일리오픽이 처리하는 정보와 이용 목적, 보관 · 파기, 이용자 권리 안내." },
+  "/login": { title: `로그인 · ${BRAND}` },
+  "/study": { title: `오늘의 학습 · ${BRAND}` },
+  "/study/speak": { title: `랜덤 스피킹 · ${BRAND}` },
+  "/study/words": { title: `단어 게임 · ${BRAND}` },
+};
+
 function setHead(selector: string, create: () => HTMLElement, attr: string, value: string | null) {
   let el = document.head.querySelector<HTMLElement>(selector);
   if (value === null) return el?.remove();
@@ -43,6 +62,14 @@ function SeoTags() {
   useEffect(() => {
     const path = pathname.length > 1 ? pathname.replace(/\/+$/, "") : "/";
     const isPublic = PUBLIC_PATHS.includes(path);
+    const page = PAGES[path];
+    document.title = page?.title ?? `페이지를 찾을 수 없어요 · ${BRAND}`;
+    setHead(
+      'meta[name="description"]',
+      () => Object.assign(document.createElement("meta"), { name: "description" }),
+      "content",
+      page?.description ?? PAGES["/"].description!,
+    );
     setHead(
       'link[rel="canonical"]',
       () => Object.assign(document.createElement("link"), { rel: "canonical" }),
@@ -107,7 +134,7 @@ createRoot(document.getElementById("root")!).render(
           <Route path="/help" element={<Help />} />
           <Route path="/privacy" element={<Privacy />} />
           <Route path="/login" element={<Login />} />
-          <Route path="/study" element={<StudyApp />} />
+          <Route path="/study/*" element={<StudyApp />} />
           {import.meta.env.DEV && <Route path="/dev/study" element={<DevPreview />} />}
           {import.meta.env.DEV && <Route path="/dev/assets" element={<DevAssets />} />}
           <Route path="*" element={<NotFound />} />

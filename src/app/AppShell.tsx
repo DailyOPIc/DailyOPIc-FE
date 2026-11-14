@@ -1,8 +1,10 @@
 import { useState, type ReactNode } from "react";
-import { Link } from "react-router-dom";
+import { Link, NavLink } from "react-router-dom";
+import { Icon, type IconName } from "../assets/Icon";
+import { Mascot } from "../assets/Mascot";
 import { signOut } from "../lib/auth";
 import { DAILY_GOAL, type GameState } from "../lib/game";
-import { isMuted, setMuted, sfx } from "../lib/sfx";
+import { isMuted, play, setMuted } from "../lib/sfx";
 
 type Props = {
   game: GameState;
@@ -12,6 +14,12 @@ type Props = {
   children: ReactNode;
 };
 
+const NAV: { to: string; label: string; icon: IconName; end?: boolean }[] = [
+  { to: "/study", label: "오늘의 학습", icon: "mic", end: true },
+  { to: "/study/speak", label: "랜덤 스피킹", icon: "dice" },
+  { to: "/study/words", label: "단어 게임", icon: "keyboard" },
+];
+
 /** 서비스 화면 틀: 사이트 헤더 · 푸터 없이 왼쪽 레일 + 가운데 학습 + 오른쪽 현황 */
 export function AppShell({ game, tokens, plan, onEditPrefs, children }: Props) {
   const [menu, setMenu] = useState(false);
@@ -20,31 +28,37 @@ export function AppShell({ game, tokens, plan, onEditPrefs, children }: Props) {
   const toggleMute = () => {
     setMuted(!muted);
     setMute(!muted);
-    if (muted) sfx.tap();
+    if (muted) play("select");
   };
 
   const nav = (
     <>
-      <span className="rail-item active">
-        <span className="rail-icon">🎙️</span>학습
-      </span>
+      {NAV.map((n) => (
+        <NavLink key={n.to} to={n.to} end={n.end} className="rail-item" onClick={() => play("tap", { volume: 0.4 })}>
+          <Icon name={n.icon} size={30} />
+          {n.label}
+        </NavLink>
+      ))}
       <span className="rail-item soon" title="곧 열려요">
-        <span className="rail-icon">📝</span>모의고사<em>곧</em>
-      </span>
-      <span className="rail-item soon" title="곧 열려요">
-        <span className="rail-icon">📚</span>단어장<em>곧</em>
+        <Icon name="clipboard" size={30} />
+        모의고사<em>곧</em>
       </span>
       <Link className="rail-item" to="/membership">
-        <span className="rail-icon">💎</span>요금제
+        <Icon name="gem" size={30} />
+        요금제
       </Link>
-      <button className="rail-item" onClick={onEditPrefs}>
-        <span className="rail-icon">⚙️</span>단계 · 설문
+      <div className="rail-sep" />
+      <button className="rail-item small" onClick={onEditPrefs}>
+        <Icon name="sliders" size={26} />
+        단계 · 설문
       </button>
-      <button className="rail-item" onClick={toggleMute}>
-        <span className="rail-icon">{muted ? "🔇" : "🔊"}</span>효과음 {muted ? "끔" : "켬"}
+      <button className="rail-item small" onClick={toggleMute}>
+        <Icon name={muted ? "soundOff" : "soundOn"} size={26} />
+        효과음 {muted ? "끔" : "켬"}
       </button>
-      <button className="rail-item" onClick={() => void signOut()}>
-        <span className="rail-icon">👋</span>로그아웃
+      <button className="rail-item small" onClick={() => void signOut()}>
+        <Icon name="door" size={26} />
+        로그아웃
       </button>
     </>
   );
@@ -53,19 +67,19 @@ export function AppShell({ game, tokens, plan, onEditPrefs, children }: Props) {
     <div className="app">
       <aside className="rail">
         <Link to="/" className="rail-brand">
-          <img src="/images/logo-mark.png" alt="" width={32} height={32} />
+          <img src="/images/logo-mark.png" alt="" width={34} height={34} />
           데일리오픽
         </Link>
         <nav className="rail-nav">{nav}</nav>
       </aside>
 
       <header className="app-topbar">
-        <Link to="/" className="rail-brand">
-          <img src="/images/logo-mark.png" alt="데일리오픽" width={28} height={28} />
+        <Link to="/" className="topbar-logo" aria-label="데일리오픽 홈">
+          <img src="/images/logo-mark.png" alt="" width={30} height={30} />
         </Link>
         <Stats game={game} tokens={tokens} compact />
-        <button className="topbar-menu" aria-expanded={menu} aria-label="메뉴" onClick={() => setMenu((v) => !v)}>
-          ☰
+        <button className="icon-btn" aria-expanded={menu} aria-label="메뉴" onClick={() => setMenu((v) => !v)}>
+          <Icon name={menu ? "close" : "menu"} size={24} />
         </button>
         {menu && (
           <nav className="topbar-sheet" onClick={() => setMenu(false)}>
@@ -76,18 +90,37 @@ export function AppShell({ game, tokens, plan, onEditPrefs, children }: Props) {
 
       <main className="app-main">{children}</main>
 
+      <nav className="tabbar" aria-label="학습 메뉴">
+        {NAV.map((n) => (
+          <NavLink key={n.to} to={n.to} end={n.end} className="tab" onClick={() => play("tap", { volume: 0.4 })}>
+            <Icon name={n.icon} size={28} />
+            <span>{n.label}</span>
+          </NavLink>
+        ))}
+      </nav>
+
       <aside className="side">
         <Stats game={game} tokens={tokens} />
         <GoalCard game={game} />
         {plan === "free" && (
           <div className="side-card upsell">
-            <strong>결과 전체를 열어 보세요</strong>
-            <p>교정 답안 · 모범 답안 · 목표 등급까지 차이를 베이직부터 볼 수 있어요.</p>
+            <Mascot mood="cheer" size={64} />
+            <div>
+              <strong>결과 전체를 열어 보세요</strong>
+              <p>교정 답안 · 모범 답안 · 목표 등급까지 차이를 베이직부터 볼 수 있어요.</p>
+            </div>
             <Link to="/membership" className="btn btn-primary btn-block">
               요금제 보기
             </Link>
           </div>
         )}
+        <div className="side-card tip">
+          <Icon name="sparkle" size={28} />
+          <p>
+            <b>무료로 계속 연습하기</b>
+            말하기 연습 · 간단 체크 · 랜덤 스피킹 · 단어 게임은 토큰 없이 무제한이에요. 토큰은 AI 정밀 분석에만 써요.
+          </p>
+        </div>
       </aside>
     </div>
   );
@@ -97,13 +130,13 @@ function Stats({ game, tokens, compact }: { game: GameState; tokens: number | nu
   return (
     <div className={compact ? "stats-row compact" : "stats-row"}>
       <span className={`stat-chip streak${game.streak > 0 ? " lit" : ""}`} title="연속 학습일">
-        🔥 <b>{game.streak}</b>
+        <Icon name="flame" size={compact ? 22 : 26} /> <b>{game.streak}</b>
       </span>
       <span className="stat-chip xp" title="경험치">
-        ⚡ <b>{game.xp}</b>
+        <Icon name="bolt" size={compact ? 22 : 26} /> <b>{game.xp}</b>
       </span>
-      <span className="stat-chip token" title="오늘 남은 데일리 토큰">
-        🪙 <b>{tokens ?? "–"}</b>
+      <span className="stat-chip token" title="오늘 남은 AI 분석 토큰">
+        <Icon name="coin" size={compact ? 22 : 26} /> <b>{tokens ?? "–"}</b>
       </span>
     </div>
   );
@@ -115,24 +148,19 @@ export function GoalCard({ game }: { game: GameState }) {
   const r = 34;
   const c = 2 * Math.PI * r;
   return (
-    <div className="side-card goal">
+    <div className={`side-card goal${done >= DAILY_GOAL ? " met" : ""}`}>
       <svg viewBox="0 0 80 80" width="80" height="80" aria-hidden="true">
         <circle cx="40" cy="40" r={r} className="goal-track" />
-        <circle
-          cx="40"
-          cy="40"
-          r={r}
-          className="goal-fill"
-          strokeDasharray={c}
-          strokeDashoffset={c * (1 - pct)}
-          transform="rotate(-90 40 40)"
-        />
+        <circle cx="40" cy="40" r={r} className="goal-fill" strokeDasharray={c} strokeDashoffset={c * (1 - pct)} transform="rotate(-90 40 40)" />
+        <foreignObject x="20" y="20" width="40" height="40">
+          <Icon name={done >= DAILY_GOAL ? "trophy" : "target"} size={40} />
+        </foreignObject>
       </svg>
       <div>
         <strong>오늘의 목표</strong>
         <p>
-          답변 분석 {done} / {DAILY_GOAL}
-          {done >= DAILY_GOAL ? " · 달성! 🎉" : ""}
+          학습 활동 {done} / {DAILY_GOAL}
+          {done >= DAILY_GOAL ? " · 달성!" : ""}
         </p>
       </div>
     </div>

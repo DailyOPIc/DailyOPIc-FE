@@ -1,8 +1,8 @@
 // 학습 게임 요소(XP · 연속 학습 · 일일 목표). 아직 서버에 없어서 이 브라우저에만 저장한다.
 // ponytail: 기기 로컬 저장 — 웹 · 앱 동기화가 필요해지면 서버(userProfiles)로 옮긴다.
 
-export const XP_PER_ANSWER = 10;
-export const DAILY_GOAL = 3; // 하루 목표: 답변 3개 분석
+export const XP = { aiAnswer: 10, practice: 5, wordCorrect: 1 } as const;
+export const DAILY_GOAL = 3; // 하루 목표: 학습 활동 3번(말하기 연습 · AI 분석 · 단어 게임 한 판)
 
 export type GameState = {
   xp: number;
@@ -39,14 +39,17 @@ export function loadGame(uid: string): GameState {
   return s;
 }
 
-export function recordAnswer(uid: string): { state: GameState; gained: number; goalJustReached: boolean; streakUp: boolean } {
+export type Recorded = { state: GameState; gained: number; goalJustReached: boolean; streakUp: boolean };
+
+/** 학습 활동 한 번을 기록한다. xp만큼 경험치, 활동 1회(오늘 목표 · 연속 학습에 반영). */
+export function recordActivity(uid: string, xp: number): Recorded {
   const before = loadGame(uid);
   const today = before.today;
   const streakUp = before.lastDay !== today;
   const streak = streakUp ? (before.lastDay === prevDay(today) ? before.streak + 1 : 1) : before.streak;
   const state: GameState = {
     ...before,
-    xp: before.xp + XP_PER_ANSWER,
+    xp: before.xp + xp,
     streak,
     bestStreak: Math.max(before.bestStreak, streak),
     lastDay: today,
@@ -59,7 +62,7 @@ export function recordAnswer(uid: string): { state: GameState; gained: number; g
   }
   return {
     state,
-    gained: XP_PER_ANSWER,
+    gained: xp,
     goalJustReached: before.todayCount < DAILY_GOAL && state.todayCount >= DAILY_GOAL,
     streakUp,
   };

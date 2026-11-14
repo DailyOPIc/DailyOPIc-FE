@@ -1,24 +1,40 @@
 import { useCallback, useEffect, useState, type ReactNode } from "react";
-import { Navigate } from "react-router-dom";
+import { Navigate, useLocation } from "react-router-dom";
+import { Mascot } from "../assets/Mascot";
 import { api, type ApiError, type Evaluation, type QuestionSet, type Usage } from "../lib/api";
 import { useAuth } from "../lib/auth";
-import { loadGame, recordAnswer, type GameState } from "../lib/game";
+import { loadGame, recordActivity, XP, type GameState, type Recorded } from "../lib/game";
 import { loadPrefs, savePrefs, type StudyPrefs } from "../lib/prefs";
+import type { QuickCheck } from "../lib/quickcheck";
+import { play, warmUp } from "../lib/sfx";
 import { AppShell } from "./AppShell";
-import { Lesson, type Celebration } from "./Lesson";
+import { Lesson } from "./Lesson";
 import { Onboarding } from "./Onboarding";
 import { PathHome } from "./PathHome";
+import { RandomSpeak } from "./RandomSpeak";
+import { WordGames } from "./WordGames";
 import "./app.css";
 
-const resultsKey = (setId: string) => `dailyopic:results:${setId}`;
-
-function loadResults(setId: string): Record<number, Evaluation> {
+// 기기에 남기는 세트별 기록(서버에는 아직 없다)
+function loadJSON<T>(key: string, fallback: T): T {
   try {
-    return JSON.parse(localStorage.getItem(resultsKey(setId)) ?? "{}");
+    return JSON.parse(localStorage.getItem(key) ?? "") as T;
   } catch {
-    return {};
+    return fallback;
   }
 }
+function saveJSON(key: string, value: unknown) {
+  try {
+    localStorage.setItem(key, JSON.stringify(value));
+  } catch {
+    /* 저장이 막혀도 화면은 유지 */
+  }
+}
+const K = {
+  results: (id: string) => `dailyopic:results:${id}`,
+  practiced: (id: string) => `dailyopic:practiced:${id}`,
+  chests: (id: string) => `dailyopic:chests:${id}`,
+};
 
 export function StudyApp() {
   const { user, ready } = useAuth();
@@ -28,10 +44,14 @@ export function StudyApp() {
 }
 
 function Study({ uid }: { uid: string }) {
+  const { pathname } = useLocation();
+  const view = pathname.startsWith("/study/speak") ? "speak" : pathname.startsWith("/study/words") ? "words" : "path";
   const [prefs, setPrefs] = useState<StudyPrefs | null>(() => loadPrefs(uid));
   const [editing, setEditing] = useState(false);
   const [set, setSet] = useState<QuestionSet | null>(null);
   const [results, setResults] = useState<Record<number, Evaluation>>({});
+  const [practiced, setPracticed] = useState<Record<number, QuickCheck>>({});
+  const [chests, setChests] = useState<number[]>([]);
   const [usage, setUsage] = useState<Usage | null>(null);
   const [plan, setPlan] = useState("free");
   const [game, setGame] = useState<GameState>(() => loadGame(uid));
@@ -41,10 +61,27 @@ function Study({ uid }: { uid: string }) {
 
   const tokens = usage ? usage.freeRemaining + usage.bonusRemaining : null;
   const refreshUsage = useCallback(() => api.usage().then(setUsage).catch(() => {}), []);
+  const reward = useCallback(
+    (xp: number): Recorded => {
+      const r = recordActivity(uid, xp);
+      setGame(r.state);
+      return r;
+    },
+    [uid],
+  );
+
+  useEffect(() => {
+    // 첫 입력 때 효과음을 미리 풀어 둔다(브라우저 자동 재생 정책)
+    const once = () => warmUp();
+    window.addEventListener("pointerdown", once, { once: true });
+    return () => window.removeEventListener("pointerdown", once);
+  }, []);
 
   const applySet = (s: QuestionSet) => {
     setSet(s);
-    setResults(loadResults(s.setId));
+    setResults(loadJSON(K.results(s.setId), {}));
+    setPracticed(loadJSON(K.practiced(s.setId), {}));
+    setChests(loadJSON(K.chests(s.setId), []));
     setLesson(null);
   };
 
@@ -84,45 +121,39 @@ function Study({ uid }: { uid: string }) {
       />
     );
 
-  if (!set) {
-    if (error)
-      return (
-        <Splash text={error}>
-          <button className="btn btn-primary" onClick={() => window.location.reload()}>
-            다시 시도
-          </button>
-        </Splash>
-      );
-    return <Splash text="오늘의 문제를 준비하고 있어요…" />;
-  }
-
-  const onEvaluated = (number: number, evaluation: Evaluation): Celebration => {
-    const next = { ...results, [number]: evaluation };
-    setResults(next);
-    try {
-      localStorage.setItem(resultsKey(set.setId), JSON.stringify(next));
-    } catch {
-      /* 화면 결과는 유지 */
-    }
-    const r = recordAnswer(uid);
-    setGame(r.state);
-    void refreshUsage();
-    return { gained: r.gained, streakUp: r.streakUp, streak: r.state.streak, goalJustReached: r.goalJustReached };
-  };
-
-  if (lesson !== null)
+  // 오늘의 세트 문항 화면(전체 화면)
+  if (view === "path" && set && lesson !== null)
     return (
       <Lesson
         set={set}
         index={lesson}
         results={results}
+        practiced={practiced}
         plan={plan}
+        tokens={tokens}
         onClose={() => {
           setLesson(null);
           void refreshUsage();
         }}
         onGo={setLesson}
-        onEvaluated={onEvaluated}
+        onPracticed={(number, check) => {
+          const first = !practiced[number];
+          const prev = practiced[number];
+          // 더 좋은 기록만 남긴다. 경험치는 문항당 처음 한 번.
+          if (!prev || check.stars >= prev.stars) {
+            const next = { ...practiced, [number]: check };
+            setPracticed(next);
+            saveJSON(K.practiced(set.setId), next);
+          }
+          return first ? reward(XP.practice) : null;
+        }}
+        onEvaluated={(number, evaluation) => {
+          const next = { ...results, [number]: evaluation };
+          setResults(next);
+          saveJSON(K.results(set.setId), next);
+          void refreshUsage();
+          return reward(XP.aiAnswer);
+        }}
       />
     );
 
@@ -131,8 +162,10 @@ function Study({ uid }: { uid: string }) {
     setBusy(true);
     try {
       applySet(await api.refreshSet({ initialLevel: prefs.initialLevel, survey: prefs.survey }, crypto.randomUUID()));
+      play("start");
     } catch (e) {
       const err = e as ApiError;
+      play("wrong", { volume: 0.5 });
       window.alert(err.isQuotaExhausted ? "오늘의 데일리 토큰을 모두 썼어요. 자정에 다시 채워져요." : err.message);
     } finally {
       setBusy(false);
@@ -140,17 +173,50 @@ function Study({ uid }: { uid: string }) {
     }
   };
 
+  let content: ReactNode;
+  if (view === "speak") content = <RandomSpeak prefs={prefs} onReward={reward} />;
+  else if (view === "words") content = <WordGames onReward={reward} />;
+  else if (set)
+    content = (
+      <PathHome
+        set={set}
+        results={results}
+        practiced={practiced}
+        openedChests={chests}
+        busy={busy}
+        onOpen={setLesson}
+        onNewSet={newSet}
+        onChest={(n) => {
+          const next = [...chests, n];
+          setChests(next);
+          saveJSON(K.chests(set.setId), next);
+          reward(15);
+          play("fanfare");
+        }}
+      />
+    );
+  else if (error)
+    content = (
+      <Splash text={error} inline>
+        <button className="btn btn-primary" onClick={() => window.location.reload()}>
+          다시 시도
+        </button>
+      </Splash>
+    );
+  else content = <Splash text="오늘의 문제를 준비하고 있어요…" inline />;
+
+  // 단어 게임 · 랜덤 스피킹 진행 화면은 각자 전체 화면을 쓰므로 틀 안에서도 그대로 보인다.
   return (
     <AppShell game={game} tokens={tokens} plan={plan} onEditPrefs={() => setEditing(true)}>
-      <PathHome set={set} results={results} busy={busy} onOpen={setLesson} onNewSet={newSet} />
+      {content}
     </AppShell>
   );
 }
 
-function Splash({ text, children }: { text: string; children?: ReactNode }) {
+function Splash({ text, children, inline }: { text: string; children?: ReactNode; inline?: boolean }) {
   return (
-    <div className="splash">
-      <img src="/images/logo-mark.png" alt="" width={72} height={72} className="buddy bounce" />
+    <div className={inline ? "splash inline" : "splash"}>
+      <Mascot mood="think" size={110} />
       <p>{text}</p>
       {children}
     </div>

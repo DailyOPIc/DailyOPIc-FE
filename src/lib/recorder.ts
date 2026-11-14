@@ -22,7 +22,7 @@ export const speechSupported = Boolean(Ctor && typeof MediaRecorder !== "undefin
 
 export const MAX_ANSWER_SECONDS = 180;
 
-export type Recording = { transcript: string; audio: Blob | null };
+export type Recording = { transcript: string; audio: Blob | null; seconds: number };
 
 /** 녹음과 실시간 전사를 함께 돌린다. stop()이 최종 전사와 오디오를 돌려준다. */
 export function useAnswerRecorder() {
@@ -38,6 +38,8 @@ export function useAnswerRecorder() {
   const active = useRef(false);
   const timer = useRef<number>();
   const pendingStop = useRef<((r: Recording) => void) | null>(null);
+  const startedAt = useRef(0);
+  const elapsed = () => (startedAt.current ? (Date.now() - startedAt.current) / 1000 : 0);
   // 180초가 끝나 자동으로 멈췄을 때 화면에 결과를 넘기는 통로
   const onAutoStop = useRef<((r: Recording) => void) | null>(null);
 
@@ -54,12 +56,13 @@ export function useAnswerRecorder() {
   const stop = useCallback(
     () =>
       new Promise<Recording>((resolve) => {
-        if (!active.current) return resolve({ transcript: finalText.current.trim(), audio: null });
+        if (!active.current) return resolve({ transcript: finalText.current.trim(), audio: null, seconds: elapsed() });
         pendingStop.current = resolve;
         const rec = recorder.current;
         cleanup();
+        const seconds = elapsed();
         if (!rec || rec.state === "inactive") {
-          resolve({ transcript: finalText.current.trim(), audio: null });
+          resolve({ transcript: finalText.current.trim(), audio: null, seconds });
         } else {
           rec.stop(); // onstop에서 resolve
         }
@@ -87,7 +90,7 @@ export function useAnswerRecorder() {
     rec.ondataavailable = (e) => e.data.size && chunks.current.push(e.data);
     rec.onstop = () => {
       const audio = chunks.current.length ? new Blob(chunks.current, { type: rec.mimeType }) : null;
-      pendingStop.current?.({ transcript: finalText.current.trim(), audio });
+      pendingStop.current?.({ transcript: finalText.current.trim(), audio, seconds: elapsed() });
       pendingStop.current = null;
     };
     recorder.current = rec;
@@ -119,9 +122,9 @@ export function useAnswerRecorder() {
 
     setRemaining(MAX_ANSWER_SECONDS);
     setListening(true);
-    const startedAt = Date.now();
+    startedAt.current = Date.now();
     timer.current = window.setInterval(() => {
-      const left = MAX_ANSWER_SECONDS - Math.floor((Date.now() - startedAt) / 1000);
+      const left = MAX_ANSWER_SECONDS - Math.floor((Date.now() - startedAt.current) / 1000);
       setRemaining(Math.max(0, left));
       if (left <= 0) void stop().then((result) => onAutoStop.current?.(result));
     }, 250);

@@ -1895,3 +1895,17 @@ h3 {
   .login-backdrop span { font-size: 96px; }
   .login-logo { top: 3%; right: -6%; }
 }
+
+/* 좁은 화면: 그리드 칸이 내용 최소 폭 때문에 화면 밖으로 밀리지 않게 */
+.feature-inner > *,
+.demo {
+  min-width: 0;
+}
+.q-chips {
+  overflow: hidden;
+  -webkit-mask-image: linear-gradient(90deg, #000 85%, transparent);
+  mask-image: linear-gradient(90deg, #000 85%, transparent);
+}
+.q-chips span {
+  flex-shrink: 0;
+}

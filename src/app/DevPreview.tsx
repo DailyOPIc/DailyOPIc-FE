@@ -1,11 +1,14 @@
 // 개발 전용(운영 빌드에서 제외): 로그인 없이 학습 화면을 샘플 데이터로 본다. /dev/study?view=path|lesson|result|onboarding
 import { useState } from "react";
 import type { Evaluation, QuestionSet } from "../lib/api";
-import type { GameState } from "../lib/game";
+import type { GameState, Recorded } from "../lib/game";
+import { quickCheck } from "../lib/quickcheck";
 import { AppShell } from "./AppShell";
 import { Lesson } from "./Lesson";
 import { Onboarding } from "./Onboarding";
 import { PathHome } from "./PathHome";
+import { RandomSpeak } from "./RandomSpeak";
+import { WordGames } from "./WordGames";
 import "./app.css";
 
 const sections = ["survey", "survey", "survey", "unexpected", "unexpected", "survey", "survey", "roleplay", "roleplay", "comparison", "comparison", "advanced", "advanced", "advanced"];
@@ -33,6 +36,11 @@ const EVAL: Evaluation = {
   answerQuality: "gradable",
 };
 const GAME: GameState = { xp: 120, streak: 4, bestStreak: 6, lastDay: null, today: "", todayCount: 2 };
+const REWARD: Recorded = { state: { ...GAME, streak: 5, todayCount: 3 }, gained: 10, streakUp: true, goalJustReached: true };
+const QC = quickCheck(
+  "To be honest, I go to a cafe near my house because it is quiet. On top of that, the coffee is really good. So I usually study there, and also I meet my friends there on weekends. That's why I love it.",
+  42,
+);
 
 export function DevPreview() {
   const view = new URLSearchParams(window.location.search).get("view") ?? "path";
@@ -43,20 +51,29 @@ export function DevPreview() {
     return (
       <Lesson
         set={SET}
-        index={view === "result" ? 0 : 2}
+        index={view === "result" ? 0 : 3}
         results={results}
+        practiced={{ 4: QC }}
         plan="free"
+        tokens={1}
         onClose={() => {}}
         onGo={() => {}}
+        onPracticed={() => REWARD}
         onEvaluated={(n, e) => {
           setResults({ ...results, [n]: e });
-          return { gained: 10, streakUp: true, streak: 5, goalJustReached: true };
+          return REWARD;
         }}
       />
     );
   return (
     <AppShell game={GAME} tokens={1} plan="free" onEditPrefs={() => {}}>
-      <PathHome set={SET} results={results} busy={false} onOpen={() => {}} onNewSet={() => {}} />
+      {view === "words" ? (
+        <WordGames onReward={() => REWARD} />
+      ) : view === "speak" ? (
+        <RandomSpeak prefs={{ initialLevel: 5, survey: { status: "student", residence: "family", leisure: ["movies", "cafes"], hobbies: [], sports: ["jogging"], travel: [] } }} onReward={() => REWARD} />
+      ) : (
+        <PathHome set={SET} results={results} practiced={{ 4: QC, 5: { ...QC, stars: 1 } }} openedChests={[]} busy={false} onOpen={() => {}} onChest={() => {}} onNewSet={() => {}} />
+      )}
     </AppShell>
   );
 }

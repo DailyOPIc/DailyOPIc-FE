@@ -1,5 +1,7 @@
 import { useState } from "react";
 import { LEVELS, SURVEY, TOPIC_GROUPS, type StudyPrefs } from "../lib/prefs";
+import { Mascot } from "../assets/Mascot";
+import { Icon } from "../assets/Icon";
 import { sfx } from "../lib/sfx";
 
 type Topics = Record<"leisure" | "hobbies" | "sports" | "travel", string[]>;
@@ -43,12 +45,12 @@ export function Onboarding({ initial, onDone, onCancel }: { initial?: StudyPrefs
     <div className="lesson onboarding">
       <header className="lesson-top">
         <button
-          className="lesson-close"
+          className="icon-btn"
           onClick={() => (step > 0 ? setStep(step - 1) : onCancel?.())}
           aria-label={step > 0 ? "이전 단계" : "닫기"}
           disabled={step === 0 && !onCancel}
         >
-          {step > 0 ? "←" : "✕"}
+          <Icon name={step > 0 ? "back" : "close"} size={22} />
         </button>
         <div className="lesson-progress">
           <span style={{ transform: `scaleX(${(step + 1) / steps.length})` }} />
@@ -61,7 +63,7 @@ export function Onboarding({ initial, onDone, onCancel }: { initial?: StudyPrefs
 
       <main className="lesson-body">
         <div className="buddy-row" key={step}>
-          <img src="/images/logo-mark.png" alt="" width={64} height={64} className="buddy" />
+          <Mascot mood={step === 2 && count >= 3 ? "happy" : "cheer"} size={84} />
           <p className="buddy-bubble">{steps[step].ask}</p>
         </div>
 
