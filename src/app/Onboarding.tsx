@@ -51,7 +51,7 @@ export function Onboarding({ initial, onDone, onCancel }: { initial?: StudyPrefs
           {step > 0 ? "←" : "✕"}
         </button>
         <div className="lesson-progress">
-          <span style={{ width: `${((step + 1) / steps.length) * 100}%` }} />
+          <span style={{ transform: `scaleX(${(step + 1) / steps.length})` }} />
         </div>
         <span className="lesson-count">
           {step + 1}

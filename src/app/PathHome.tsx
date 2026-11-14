@@ -38,7 +38,7 @@ export function PathHome({ set, results, busy, onOpen, onNewSet }: Props) {
             </span>
           </h1>
           <div className="unit-progress" aria-hidden="true">
-            <span style={{ width: `${(doneCount / set.questions.length) * 100}%` }} />
+            <span style={{ transform: `scaleX(${doneCount / set.questions.length})` }} />
           </div>
         </div>
         <button className="btn btn-on-dark" onClick={onNewSet} disabled={busy}>

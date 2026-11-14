@@ -115,7 +115,7 @@ export function Lesson({ set, index, results, plan, onClose, onGo, onEvaluated }
           ✕
         </button>
         <div className="lesson-progress" aria-label={`${doneCount} / ${set.questions.length} 완료`}>
-          <span style={{ width: `${Math.max(4, (doneCount / set.questions.length) * 100)}%` }} />
+          <span style={{ transform: `scaleX(${Math.max(0.04, doneCount / set.questions.length)})` }} />
         </div>
         <span className="lesson-count">
           Q{question.number}
