@@ -1,0 +1,9 @@
+# 공개 페이지는 모두 크롤링 허용.
+# 로그인 · 학습 화면(/login, /study)은 막지 않고 X-Robots-Tag: noindex 헤더로 색인만 뺀다
+# (robots.txt로 막으면 noindex를 읽지 못해 주소만 색인될 수 있다).
+User-agent: *
+Allow: /
+# Firebase 로그인 처리 경로(프록시)
+Disallow: /__/
+
+Sitemap: https://www.dailyopic.link/sitemap.xml

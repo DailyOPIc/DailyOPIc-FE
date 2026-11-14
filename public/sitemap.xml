@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- 검색에 공개하는 페이지만. 정식 주소는 www (dailyopic.link는 www로 308 리다이렉트).
+     로그인 · 학습(/login, /study)과 로그인 프록시(/__/)는 넣지 않는다. 공개 페이지를 추가하면 여기도 추가. -->
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url>
+    <loc>https://www.dailyopic.link/</loc>
+    <lastmod>2026-11-14</lastmod>
+  </url>
+  <url>
+    <loc>https://www.dailyopic.link/membership</loc>
+    <lastmod>2026-11-14</lastmod>
+  </url>
+  <url>
+    <loc>https://www.dailyopic.link/help</loc>
+    <lastmod>2026-11-14</lastmod>
+  </url>
+  <url>
+    <loc>https://www.dailyopic.link/privacy</loc>
+    <lastmod>2026-11-14</lastmod>
+  </url>
+</urlset>
