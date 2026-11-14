@@ -43,6 +43,10 @@ export function Login() {
         ))}
       </Marquee>
       <LogoBuild className="login-logo" />
+      <Link to="/" className="login-home" aria-label="데일리오픽 홈">
+        <img src="/images/logo-mark.png" alt="" width={32} height={32} />
+        데일리오픽
+      </Link>
 
       <div className="login-inner">
         <p className="login-kicker">매일 말하는 연습이 등급을 만드는</p>

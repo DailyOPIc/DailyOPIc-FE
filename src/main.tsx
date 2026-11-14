@@ -1,4 +1,4 @@
-import { StrictMode, useEffect } from "react";
+import { StrictMode, useEffect, type ReactNode } from "react";
 import { createRoot } from "react-dom/client";
 import { BrowserRouter, Route, Routes, useLocation } from "react-router-dom";
 import { Header } from "./components/Header";
@@ -9,7 +9,8 @@ import { Help } from "./pages/Help";
 import { Privacy } from "./pages/Privacy";
 import { NotFound } from "./pages/NotFound";
 import { Login } from "./pages/Login";
-import { Study } from "./pages/Study";
+import { StudyApp } from "./app/StudyApp";
+import { DevPreview } from "./app/DevPreview";
 import { AuthProvider } from "./lib/auth";
 import "./styles.css";
 
@@ -41,25 +42,38 @@ function RevealOnScroll() {
   return null;
 }
 
+/** 서비스 화면(/login, /study)은 사이트 헤더 · 푸터 없이 꽉 채운다. */
+function SiteChrome({ children }: { children: ReactNode }) {
+  const { pathname } = useLocation();
+  const app = /^\/(study|login|dev)/.test(pathname);
+  if (app) return <>{children}</>;
+  return (
+    <>
+      <Header />
+      <main>{children}</main>
+      <Footer />
+    </>
+  );
+}
+
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <AuthProvider>
     <BrowserRouter>
       <ScrollToTop />
       <RevealOnScroll />
-      <Header />
-      <main>
+      <SiteChrome>
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/membership" element={<Membership />} />
           <Route path="/help" element={<Help />} />
           <Route path="/privacy" element={<Privacy />} />
           <Route path="/login" element={<Login />} />
-          <Route path="/study" element={<Study />} />
+          <Route path="/study" element={<StudyApp />} />
+          {import.meta.env.DEV && <Route path="/dev/study" element={<DevPreview />} />}
           <Route path="*" element={<NotFound />} />
         </Routes>
-      </main>
-      <Footer />
+      </SiteChrome>
     </BrowserRouter>
     </AuthProvider>
   </StrictMode>,
