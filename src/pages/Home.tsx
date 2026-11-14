@@ -1,9 +1,36 @@
-import type { ReactNode } from "react";
+import type { CSSProperties, ReactNode } from "react";
 import { Link } from "react-router-dom";
-import { AppStoreButton, Logo, Phone } from "../components/Bits";
-import { APP_STORE_URL } from "../site";
+import { AppStoreButton, Logo, Marquee, Phone } from "../components/Bits";
+import { REVIEWS, type Review } from "../site";
 
 const GRADES = ["NL", "NM", "NH", "IL", "IM1", "IM2", "IM3", "IH", "AL"];
+
+const KEYWORDS = [
+  "오늘의 문제 Q2~Q15",
+  "질문 듣기",
+  "3분 실전 답변",
+  "OPIc 예상 등급",
+  "잘한 점 · 개선할 점",
+  "모범 답안",
+  "실전 모의고사",
+  "시험일 역산 플래너",
+  "오늘의 단어 20개",
+  "연속 학습 기록",
+];
+
+function ReviewCard({ review }: { review: Review }) {
+  return (
+    <article className="review">
+      <p className="stars" aria-label={`별점 ${review.rating}점`}>
+        {"★".repeat(review.rating)}
+        <span className="stars-off">{"★".repeat(5 - review.rating)}</span>
+      </p>
+      <h3>{review.title}</h3>
+      <p>{review.body}</p>
+      <p className="review-meta">{review.author} · App Store</p>
+    </article>
+  );
+}
 
 const GALLERY = [
   { src: "/images/daily-idle.webp", label: "오늘의 문제" },
@@ -26,7 +53,7 @@ function Feature({ eyebrow, title, points, media, reverse }: FeatureProps) {
   return (
     <section className={`feature${reverse ? " feature-reverse" : ""}`}>
       <div className="container feature-inner">
-        <div className="feature-copy">
+        <div className="feature-copy" data-reveal>
           <p className="eyebrow">{eyebrow}</p>
           <h2>{title}</h2>
           <ul className="points">
@@ -38,7 +65,9 @@ function Feature({ eyebrow, title, points, media, reverse }: FeatureProps) {
             ))}
           </ul>
         </div>
-        <div className="feature-media">{media}</div>
+        <div className="feature-media" data-reveal style={{ "--reveal-delay": "120ms" } as CSSProperties}>
+          {media}
+        </div>
       </div>
     </section>
   );
@@ -74,6 +103,14 @@ export function Home() {
           </div>
         </div>
       </section>
+
+      <Marquee label="데일리오픽 주요 기능" speed={45}>
+        {KEYWORDS.map((k) => (
+          <span key={k} className="keyword">
+            {k}
+          </span>
+        ))}
+      </Marquee>
 
       <Feature
         eyebrow="01 · 오늘의 문제"
@@ -132,11 +169,15 @@ export function Home() {
           },
         ]}
         media={
-          <div className="grade-card" aria-label="OPIc 등급 단계">
+          <div className="grade-card" aria-label="OPIc 등급 단계" data-reveal>
             <p className="grade-card-title">OPIc 9단계 등급</p>
             <ol className="grades">
-              {GRADES.map((g) => (
-                <li key={g} className={g === "IH" ? "is-target" : undefined}>
+              {GRADES.map((g, i) => (
+                <li
+                  key={g}
+                  className={g === "IH" ? "is-target" : undefined}
+                  style={{ "--i": i } as CSSProperties}
+                >
                   {g}
                 </li>
               ))}
@@ -169,7 +210,7 @@ export function Home() {
       />
 
       <section className="gallery-section">
-        <div className="container">
+        <div className="container" data-reveal>
           <p className="eyebrow">실제 앱 화면</p>
           <h2>보이는 그대로 연습해요</h2>
         </div>
@@ -184,25 +225,27 @@ export function Home() {
       </section>
 
       <section className="reviews">
-        <div className="container">
+        <div className="container" data-reveal>
           <p className="eyebrow">사용자 후기</p>
           <h2>App Store에 남겨주신 이야기</h2>
-          <div className="review-list">
-            <article className="review">
-              <p className="stars" aria-label="별점 5점">★★★★★</p>
-              <h3>학원 다니려다가 그냥 이거함</h3>
-              <p>괜찮네요 학원비 잘 아낍니다</p>
-              <p className="review-meta">사용자1926 · App Store</p>
-            </article>
-          </div>
-          <a className="text-link" href={`${APP_STORE_URL}?see-all=reviews`} target="_blank" rel="noreferrer">
-            App Store에서 후기 더 보기 →
-          </a>
         </div>
+        {REVIEWS.length >= 3 ? (
+          <Marquee label="사용자 후기" speed={60}>
+            {REVIEWS.map((r) => (
+              <ReviewCard key={r.title} review={r} />
+            ))}
+          </Marquee>
+        ) : (
+          <div className="container review-list" data-reveal>
+            {REVIEWS.map((r) => (
+              <ReviewCard key={r.title} review={r} />
+            ))}
+          </div>
+        )}
       </section>
 
       <section className="cta">
-        <div className="container cta-inner">
+        <div className="container cta-inner" data-reveal>
           <Logo size={72} />
           <h2>오늘의 문제, 지금 말해보세요</h2>
           <p>무료로 시작하고, 필요할 때만 업그레이드하세요.</p>

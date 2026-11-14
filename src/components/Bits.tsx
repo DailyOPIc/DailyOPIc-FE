@@ -1,3 +1,4 @@
+import type { CSSProperties, ReactNode } from "react";
 import { APP_STORE_URL } from "../site";
 
 export function Phone({ src, alt, tilt }: { src: string; alt: string; tilt?: "left" | "right" }) {
@@ -25,5 +26,19 @@ export function Logo({ size }: { size: number }) {
       <source srcSet="/images/logo-mark-dark.png" media="(prefers-color-scheme: dark)" />
       <img src="/images/logo-mark.png" alt="" width={size} height={size} />
     </picture>
+  );
+}
+
+/** 가로 무한 스크롤. 같은 줄을 두 번 그려 -50%만큼 흘려보낸다. */
+export function Marquee({ children, label, speed = 40 }: { children: ReactNode; label: string; speed?: number }) {
+  return (
+    <div className="marquee" role="region" aria-label={label} style={{ "--marquee-duration": `${speed}s` } as CSSProperties}>
+      <div className="marquee-track">
+        <div className="marquee-group">{children}</div>
+        <div className="marquee-group" aria-hidden="true">
+          {children}
+        </div>
+      </div>
+    </div>
   );
 }

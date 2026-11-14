@@ -34,7 +34,7 @@ const FAQ = [
 export function Help() {
   return (
     <div className="page">
-      <section className="page-head container">
+      <section className="page-head container" data-reveal>
         <p className="eyebrow">고객센터</p>
         <h1>무엇을 도와드릴까요?</h1>
         <p className="lead">궁금한 점은 아래에서 먼저 찾아보시고, 해결되지 않으면 이메일로 문의해 주세요.</p>

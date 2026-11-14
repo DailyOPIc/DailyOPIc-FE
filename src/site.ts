@@ -77,3 +77,11 @@ export const PLANS: Plan[] = [
     ],
   },
 ];
+
+export type Review = { title: string; body: string; rating: number; author: string };
+
+// 실제 App Store 리뷰만 넣는다. 지어낸 후기는 표시광고법 위반이다.
+// 3개 이상이 되면 랜딩 후기 섹션이 자동으로 가로 무한 스크롤로 바뀐다.
+export const REVIEWS: Review[] = [
+  { title: "학원 다니려다가 그냥 이거함", body: "괜찮네요 학원비 잘 아낍니다", rating: 5, author: "사용자1926" },
+];

@@ -18,10 +18,31 @@ function ScrollToTop() {
   return null;
 }
 
+/** [data-reveal] 요소가 화면에 들어오면 is-visible을 붙인다(한 번만). */
+function RevealOnScroll() {
+  const { pathname } = useLocation();
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          if (!entry.isIntersecting) continue;
+          entry.target.classList.add("is-visible");
+          observer.unobserve(entry.target);
+        }
+      },
+      { rootMargin: "0px 0px -10% 0px", threshold: 0.15 },
+    );
+    document.querySelectorAll("[data-reveal]:not(.is-visible)").forEach((el) => observer.observe(el));
+    return () => observer.disconnect();
+  }, [pathname]);
+  return null;
+}
+
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <BrowserRouter>
       <ScrollToTop />
+      <RevealOnScroll />
       <Header />
       <main>
         <Routes>

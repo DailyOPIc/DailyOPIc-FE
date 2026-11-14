@@ -944,3 +944,170 @@ h3 {
     transition: none;
   }
 }
+
+/* ───────── 모션 ───────── */
+:root {
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* 스크롤 등장: 아래에서 살짝 떠오른다 */
+[data-reveal] {
+  opacity: 0;
+  transform: translateY(28px);
+  transition: opacity 0.7s var(--ease-out), transform 0.7s var(--ease-out);
+  transition-delay: var(--reveal-delay, 0ms);
+}
+
+[data-reveal].is-visible {
+  opacity: 1;
+  transform: none;
+}
+
+/* 히어로: 로드 시 순서대로 등장 */
+.hero-copy > * {
+  animation: rise 0.8s var(--ease-out) both;
+}
+.hero-copy > :nth-child(2) { animation-delay: 80ms; }
+.hero-copy > :nth-child(3) { animation-delay: 160ms; }
+.hero-copy > :nth-child(4) { animation-delay: 240ms; }
+.hero-copy > :nth-child(5) { animation-delay: 320ms; }
+
+.hero-media .phone {
+  animation: rise 1s var(--ease-out) both, float 6s ease-in-out 1s infinite;
+}
+.hero-media .phone-right {
+  animation-delay: 200ms, 1.6s;
+}
+
+@keyframes rise {
+  from { opacity: 0; transform: translateY(32px); }
+}
+
+/* 기울기를 유지한 채 둥실 */
+.hero-media .phone-left { --tilt: -4deg; }
+.hero-media .phone-right { --tilt: 4deg; }
+@keyframes float {
+  0%, 100% { transform: translateY(0) rotate(var(--tilt)); }
+  50% { transform: translateY(-14px) rotate(var(--tilt)); }
+}
+
+/* 기능 섹션 휴대폰: 올리면 살짝 들림 */
+.phone-pair .phone {
+  transition: transform 0.4s var(--ease-out), box-shadow 0.4s var(--ease-out);
+}
+.phone-pair .phone:hover {
+  transform: translateY(-8px);
+}
+
+/* 등급 칩: 카드가 보이면 NL부터 IH까지 차례로 켜진다 */
+.grade-card .grades li {
+  opacity: 0.35;
+  transform: scale(0.92);
+  transition: opacity 0.4s ease, transform 0.4s var(--ease-out), background-color 0.4s ease;
+  transition-delay: calc(var(--i) * 90ms + 200ms);
+}
+.grade-card.is-visible .grades li {
+  opacity: 1;
+  transform: none;
+}
+.grade-card.is-visible .grades li.is-target {
+  animation: pulse 2.4s ease-in-out 1.3s infinite;
+}
+@keyframes pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.55); }
+  50% { box-shadow: 0 0 0 8px rgba(255, 255, 255, 0); }
+}
+
+/* 카드 호버 */
+.plan,
+.review,
+.gallery-item img {
+  transition: transform 0.35s var(--ease-out), box-shadow 0.35s var(--ease-out);
+}
+.plan:hover,
+.review:hover {
+  transform: translateY(-6px);
+  box-shadow: var(--shadow);
+}
+.gallery-item img:hover {
+  transform: translateY(-6px) scale(1.02);
+}
+
+.button-primary:hover {
+  background: color-mix(in srgb, var(--primary) 88%, #000);
+}
+.button-ghost:hover {
+  box-shadow: inset 0 0 0 1.5px var(--primary);
+}
+
+/* 가로 무한 스크롤 */
+.marquee {
+  overflow: hidden;
+  padding: 20px 0;
+  border-block: 1px solid var(--line);
+  -webkit-mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent);
+  mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent);
+}
+.reviews .marquee {
+  border: 0;
+  padding: 40px 0 8px;
+}
+.marquee-track {
+  display: flex;
+  width: max-content;
+  animation: marquee var(--marquee-duration, 40s) linear infinite;
+}
+.marquee:hover .marquee-track {
+  animation-play-state: paused;
+}
+.marquee-group {
+  display: flex;
+  gap: 16px;
+  padding-right: 16px;
+}
+.marquee-group .review {
+  width: 320px;
+  flex-shrink: 0;
+}
+@keyframes marquee {
+  to { transform: translateX(-50%); }
+}
+
+.keyword {
+  display: inline-flex;
+  align-items: center;
+  gap: 16px;
+  white-space: nowrap;
+  font-weight: 700;
+  font-size: 18px;
+  color: var(--ink-2);
+}
+.keyword::after {
+  content: "";
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--primary);
+}
+
+.stars-off {
+  color: var(--line);
+}
+
+/* 움직임 줄이기 설정을 존중한다 */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+  [data-reveal],
+  .grade-card .grades li {
+    opacity: 1;
+    transform: none;
+  }
+  .marquee {
+    overflow-x: auto;
+  }
+}

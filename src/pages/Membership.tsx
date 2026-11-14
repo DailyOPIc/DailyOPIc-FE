@@ -1,3 +1,4 @@
+import type { CSSProperties } from "react";
 import { AppStoreButton } from "../components/Bits";
 import { PLANS } from "../site";
 
@@ -12,15 +13,20 @@ const COMPARISON: { title: string; values: string[] }[] = [
 export function Membership() {
   return (
     <div className="page">
-      <section className="page-head container">
+      <section className="page-head container" data-reveal>
         <p className="eyebrow">요금제</p>
         <h1>필요한 만큼만, 가볍게</h1>
         <p className="lead">무료로 시작하고, 더 많이 연습하고 싶을 때 플랜을 고르세요. 모든 유료 플랜은 월 구독이에요.</p>
       </section>
 
       <section className="container plans">
-        {PLANS.map((plan) => (
-          <article key={plan.id} className={`plan${plan.featured ? " plan-featured" : ""}`}>
+        {PLANS.map((plan, i) => (
+          <article
+            key={plan.id}
+            className={`plan${plan.featured ? " plan-featured" : ""}`}
+            data-reveal
+            style={{ "--reveal-delay": `${i * 80}ms` } as CSSProperties}
+          >
             {plan.featured && <p className="badge">추천</p>}
             <h2>{plan.name}</h2>
             <p className="plan-tagline">{plan.tagline}</p>
