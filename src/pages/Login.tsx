@@ -19,11 +19,14 @@ export function Login() {
     } catch (e) {
       const code = (e as { code?: string }).code ?? "";
       if (code !== "auth/popup-closed-by-user" && code !== "auth/cancelled-popup-request") {
-        setError(
-          code === "auth/operation-not-allowed"
-            ? "이 로그인 방식은 아직 준비 중이에요."
-            : "로그인하지 못했어요. 다시 시도해 주세요.",
-        );
+        const messages: Record<string, string> = {
+          "auth/operation-not-allowed": "이 로그인 방식은 아직 준비 중이에요.",
+          "auth/unauthorized-domain": "이 주소에서는 아직 로그인을 열지 않았어요.",
+          "auth/popup-blocked": "팝업이 차단됐어요. 브라우저에서 팝업을 허용해 주세요.",
+          "auth/network-request-failed": "네트워크 연결을 확인해 주세요.",
+        };
+        // 원인 코드를 함께 보여 줘야 문의가 왔을 때 바로 찾는다.
+        setError(`${messages[code] ?? "로그인하지 못했어요. 다시 시도해 주세요."} (${code || "unknown"})`);
       }
     } finally {
       setBusy(false);
