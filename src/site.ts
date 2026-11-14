@@ -5,9 +5,9 @@ export const CONTACT_EMAIL = "mark77234@naver.com";
 export const BUSINESS = {
   name: "이병찬",
   owner: "이병찬",
-  address: "부산광역시 북구 낙동북로 737, 106동 101호(구포동, 유림노르웨이숲)",
   registration: "532-32-01905",
-  mailOrder: "미신고", // ponytail: 웹 결제 오픈 전 통신판매업 신고 후 번호로 교체
+  // ponytail: 웹 결제를 열기 전에 사업장 주소 · 통신판매업 신고번호(또는 "신고 면제")를
+  // 여기에 추가하고 푸터에 다시 표시해야 한다(전자상거래법 제10조).
   phone: "010-7723-4412",
   email: CONTACT_EMAIL,
 };
