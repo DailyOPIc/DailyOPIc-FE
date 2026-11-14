@@ -91,4 +91,8 @@ export type Review = {
 // 3개 이상이 되면 랜딩 후기 섹션이 자동으로 가로 무한 스크롤로 바뀐다.
 export const REVIEWS: Review[] = [
   { title: "학원 다니려다가 그냥 이거함", body: "괜찮네요 학원비 잘 아낍니다", rating: 5, author: "사용자1926", source: "App Store" },
+  // 운영자가 지인에게 직접 들은 피드백(2026-11 전달). 들은 내용 이상으로 구체화하지 않는다.
+  { body: "OPIc 등급 올리는 데 실제로 도움이 됐어요.", author: "익명", source: "베타 테스터" },
+  { body: "연습하면서 나온 예상 등급이 실제 시험에서도 그대로 나왔어요.", author: "익명", source: "베타 테스터" },
+  { body: "분석이 생각보다 훨씬 상세해서 뭘 고쳐야 할지 바로 알 수 있었어요.", author: "익명", source: "베타 테스터" },
 ];

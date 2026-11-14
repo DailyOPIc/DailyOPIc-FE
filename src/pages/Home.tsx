@@ -296,8 +296,9 @@ export function Home() {
         </div>
         {REVIEWS.length >= 3 ? (
           <Marquee label="사용자 후기" speed={60}>
-            {REVIEWS.map((r) => (
-              <ReviewCard key={r.body} review={r} />
+            {/* 후기가 적을 때 넓은 화면에서 빈칸이 생기지 않도록 한 줄 안에서 한 번 더 반복한다. */}
+            {[...REVIEWS, ...REVIEWS].map((r, i) => (
+              <ReviewCard key={i} review={r} />
             ))}
           </Marquee>
         ) : (
@@ -307,6 +308,7 @@ export function Home() {
             ))}
           </div>
         )}
+        <p className="container review-note">개인의 경험이며, 결과는 사람마다 다를 수 있어요.</p>
       </section>
 
       <section className="cta">
