@@ -56,7 +56,7 @@ const MOCK_RESULT = {
   ...EVAL,
   targetGap: "IH까지는 이유와 예시를 더 길게 이어 말하는 연습이 필요해요.",
   overallFeedback: "질문 의도에 맞게 답했고 문장도 안정적이에요. 답변 길이를 늘리면 한 단계 올라갈 수 있어요.",
-  perQuestion: SET.questions.map((q) => ({ number: q.number, feedback: "핵심은 말했지만 예시가 짧아요.", sampleAnswer: "There is a small garden behind the library where I like to sit." })),
+  perQuestion: [], // 서버 모의고사 채점은 문항별 피드백을 만들지 않는다(실제와 같게)
 };
 function seedActivity() {
   const log: Record<string, number> = {};
