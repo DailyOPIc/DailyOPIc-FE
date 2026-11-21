@@ -1,4 +1,5 @@
 import { useLayoutEffect, useState } from "react";
+import { Icon } from "../assets/Icon";
 import { createPortal } from "react-dom";
 
 // 상단 불 · 번개 · 토큰이 뭔지 알려 주는 코치마크. 모든 사용자에게 뜨고,
@@ -61,6 +62,9 @@ export function CoachMarks({ uid }: { uid: string }) {
         <div className="coach-dim" />
       )}
       <div className="coach-card" style={cardStyle}>
+        <button className="coach-x" onClick={close} aria-label="설명 닫기">
+          <Icon name="close" size={18} />
+        </button>
         <p className="coach-step">
           {step + 1} / {STEPS.length}
         </p>
@@ -70,9 +74,11 @@ export function CoachMarks({ uid }: { uid: string }) {
           <input type="checkbox" checked={never} onChange={(e) => setNever(e.target.checked)} /> 다시 보지 않기
         </label>
         <div className="coach-actions">
-          <button className="btn btn-ghost" onClick={close}>
-            닫기
-          </button>
+          {step > 0 && (
+            <button className="btn btn-ghost" onClick={() => setStep(step - 1)}>
+              이전
+            </button>
+          )}
           <button className="btn btn-primary" onClick={() => (last ? close() : setStep(step + 1))}>
             {last ? "시작하기" : "다음"}
           </button>
