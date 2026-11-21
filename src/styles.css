@@ -2424,3 +2424,40 @@ h3 {
   gap: 12px;
   margin-top: 8px;
 }
+
+/* iOS 앱 전용 스플래시(src/app/AppSplash.tsx). 흰 바탕: 시스템 실행 화면 · 상태바와 같은 색이라 튀지 않는다. */
+.app-splash {
+  position: fixed;
+  inset: 0;
+  z-index: 2000;
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  gap: 18px;
+  background: #fff;
+  transition: opacity 0.4s var(--ease-out);
+}
+.app-splash.out {
+  opacity: 0;
+  pointer-events: none;
+}
+.app-splash-logo {
+  width: 120px;
+  height: 120px;
+}
+.app-splash-name {
+  margin: 0;
+  color: var(--primary);
+  font-size: 26px;
+  font-weight: 900;
+  letter-spacing: -0.02em;
+  animation: rise 0.6s var(--ease-out) 0.5s both;
+}
+/* 스플래시에서는 로고를 절반 속도로 그려 1.3초 안에 끝낸다 */
+.app-splash-logo .stroke { animation-duration: 0.3s; }
+.app-splash-logo .s1 { animation-delay: 0.05s; }
+.app-splash-logo .s2 { animation-delay: 0.3s; }
+.app-splash-logo .s3 { animation-delay: 0.5s; animation-duration: 0.15s; }
+.app-splash-logo .s4 { animation-delay: 0.62s; animation-duration: 0.2s; }
+.app-splash-logo .s5 { animation-delay: 0.78s; animation-duration: 0.45s; }
+.app-splash-name { animation-delay: 0.3s; }

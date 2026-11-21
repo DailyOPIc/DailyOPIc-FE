@@ -18,6 +18,7 @@ import { DevAssets } from "./app/DevAssets";
 import { AuthProvider } from "./lib/auth";
 import { inApp } from "./lib/native";
 import { AppPaywall } from "./app/AppPaywall";
+import { AppSplash } from "./app/AppSplash";
 import "./styles.css";
 
 function ScrollToTop() {
@@ -136,6 +137,7 @@ createRoot(document.getElementById("root")!).render(
       <ScrollToTop />
       <RevealOnScroll />
       <SeoTags />
+      {inApp && <AppSplash />}
       <SiteChrome>
         <Routes>
           {/* iOS 앱 안: 랜딩 · 로그인은 건너뛰고, 요금제는 앱의 인앱결제 화면을 띄운다(토스 결제는 앱에서 숨김) */}

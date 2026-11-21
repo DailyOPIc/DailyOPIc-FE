@@ -24,8 +24,8 @@ const NAV: { to: string; label: string; tab?: string; icon: IconName; end?: bool
   { to: "/study", label: "오늘의 학습", tab: "학습", icon: "mic", end: true },
   { to: "/study/mock", label: "모의고사", tab: "모의고사", icon: "clipboard" },
   { to: "/study/words", label: "오픽게임", tab: "오픽게임", icon: "keyboard" },
-  { to: "/study/speak", label: "랜덤 스피킹", tab: "스피킹", icon: "dice" },
-  { to: "/study/activity", label: "활동", icon: "flame" },
+  { to: "/study/activity", label: "활동", tab: "활동", icon: "flame" },
+  { to: "/study/speak", label: "랜덤 스피킹", icon: "dice" },
 ];
 
 /** 서비스 화면 틀: 사이트 헤더 · 푸터 없이 왼쪽 레일 + 가운데 학습 + 오른쪽 현황 */
