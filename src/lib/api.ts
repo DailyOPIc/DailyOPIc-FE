@@ -38,6 +38,66 @@ export type Usage = {
   /** 웹에서 산 보유 토큰(매일 사라지지 않음). 하루 토큰을 다 쓰면 여기서 쓴다. */
   purchasedTokens?: number;
   resetsAt?: string | null;
+  mockAvailable?: boolean | null;
+  mockRemaining?: number | null;
+  mockSessionStage?: MockStage | null;
+};
+
+export type MockStage =
+  | "awaiting_start_ad"
+  | "generating_front"
+  | "answering_front"
+  | "awaiting_adjustment_ad"
+  | "generating_tail"
+  | "answering_tail"
+  | "awaiting_result_ad"
+  | "evaluating"
+  | "completed";
+
+export type MockSession = {
+  sessionId: string;
+  sessionHash: string;
+  stage: MockStage;
+  setId?: string | null;
+  adjustment?: "easier" | "same" | "harder" | null;
+  questionSet?: (QuestionSet & { requiresAdjustmentAfter?: number | null; questions: Question[] }) | null;
+};
+
+export type MockEvaluation = {
+  predictedLevel: OPIcLevel;
+  confidence: string;
+  scores: Evaluation["scores"];
+  strengths: string[];
+  improvements: string[];
+  targetGap: string;
+  overallFeedback: string;
+  perQuestion: { number: number; feedback: string; sampleAnswer: string }[];
+  disclaimer: string;
+  warnings: string[];
+};
+
+export type StudyPlan = {
+  examDate?: string | null;
+  studyWeekdays: number[]; // 1=월 … 7=일
+  intensity: "light" | "steady" | "focused";
+  preferredStudyTime: string; // "21:00"
+  timezoneIdentifier: string;
+};
+
+export type VocabEntry = {
+  id: string;
+  term: string;
+  type: "word" | "phrase" | "pattern";
+  meaningKo: string;
+  exampleEn: string;
+  exampleKo: string;
+  collocations: string[];
+};
+export type VocabSet = { setId: string; topic: string; targetLevel: OPIcLevel; entries: VocabEntry[] };
+export type VocabCoach = {
+  usageAssessment: string;
+  usageFeedbackKo: string;
+  naturalCorrectionEn: string;
 };
 
 export type Wallet = {
@@ -123,6 +183,48 @@ export const api = {
   /** 계정 삭제: 서버의 학습 기록 · 사용량 · 웹 이용권 · 토큰과 로그인 계정을 지운다(결제 기록은 보존). */
   deleteAccount: () => request<void>("/v1/users/me", { method: "DELETE" }),
   wallet: () => request<Wallet>("/v1/web-payments/wallet"),
+  // 모의고사: 회차 생성(진행 중이면 이어서) → 시작 → 7번 뒤 난이도 조정 → 15문항 채점
+  mockCreate: (body: { initialLevel: number; survey: Survey }, key: string) =>
+    request<MockSession>("/v1/mock-exams/sessions", { method: "POST", json: { ...body, background: {} }, idempotencyKey: key }),
+  mockCurrent: () => request<MockSession>("/v1/mock-exams/current"),
+  mockStart: (sessionId: string, rewardNonce: string, key: string) =>
+    request<MockSession>(`/v1/mock-exams/${sessionId}/start`, { method: "POST", json: { rewardNonce }, idempotencyKey: key }),
+  mockAdjust: (sessionId: string, adjustment: "easier" | "same" | "harder", rewardNonce: string, key: string) =>
+    request<MockSession>(`/v1/mock-exams/${sessionId}/adjustment`, {
+      method: "POST",
+      json: { adjustment, rewardNonce },
+      idempotencyKey: key,
+    }),
+  mockAbandon: (sessionId: string) => request<MockSession>(`/v1/mock-exams/${sessionId}/abandon`, { method: "POST" }),
+  mockEvaluate: (
+    args: { sessionId: string; setId: string; targetLevel: OPIcLevel; rewardNonce: string; answers: { number: number; transcript: string; audio: Blob }[] },
+    key: string,
+  ) => {
+    const form = new FormData();
+    const sorted = [...args.answers].sort((a, b) => a.number - b.number);
+    form.append(
+      "manifest",
+      JSON.stringify({
+        targetLevel: args.targetLevel,
+        setId: args.setId,
+        rewardNonce: args.rewardNonce,
+        answers: sorted.map((a) => ({ number: a.number, transcript: a.transcript })),
+      }),
+    );
+    for (const a of sorted) form.append("audioFiles", a.audio, `answer-${a.number}.${a.audio.type.includes("mp4") ? "m4a" : "webm"}`);
+    return request<MockEvaluation>(`/v1/mock-exams/${args.sessionId}/evaluate`, { method: "POST", form, idempotencyKey: key });
+  },
+  /** 모의고사 게이트 통과 증표. 웹은 광고 없이 바로 verified로 나온다. */
+  rewardIntent: (purpose: "mock_start" | "mock_adjustment" | "mock_result", sessionHash: string) =>
+    request<{ nonce: string; status: string }>("/v1/ad-rewards/intents", { method: "POST", json: { purpose, sessionHash } }),
+  studyPlan: () => request<{ configured: boolean; studyPlan: StudyPlan | null }>("/v1/users/me/study-plan"),
+  saveStudyPlan: (plan: StudyPlan) =>
+    request<{ configured: boolean; studyPlan: StudyPlan }>("/v1/users/me/study-plan", { method: "PUT", json: plan }),
+  // 단어장 생성 · 코칭은 각각 데일리 토큰 1개를 쓴다
+  vocabToday: (body: { topic: string; targetLevel: OPIcLevel; excludeTerms: string[] }, key: string) =>
+    request<VocabSet>("/v1/vocabulary/today/generate", { method: "POST", json: body, idempotencyKey: key }),
+  vocabCoach: (body: { entryId: string; term: string; type: VocabEntry["type"]; transcript: string; meaningKo: string; topic: string; targetLevel: OPIcLevel }, key: string) =>
+    request<VocabCoach>("/v1/vocabulary/coach", { method: "POST", json: body, idempotencyKey: key }),
   createOrder: (productId: string) =>
     request<WebOrder>("/v1/web-payments/orders", { method: "POST", json: { productId } }),
   confirmPayment: (body: { paymentKey: string; orderId: string; amount: number }) =>

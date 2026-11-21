@@ -17,10 +17,15 @@ type Props = {
   children: ReactNode;
 };
 
-const NAV: { to: string; label: string; icon: IconName; end?: boolean }[] = [
-  { to: "/study", label: "오늘의 학습", icon: "mic", end: true },
+// tab: 모바일 하단 탭 이름(5개까지). 없으면 ☰ 메뉴에서만 보인다.
+const NAV: { to: string; label: string; tab?: string; icon: IconName; end?: boolean }[] = [
+  { to: "/study", label: "오늘의 학습", tab: "학습", icon: "mic", end: true },
+  { to: "/study/mock", label: "모의고사", tab: "모의고사", icon: "clipboard" },
+  { to: "/study/vocab", label: "단어장", tab: "단어장", icon: "book" },
   { to: "/study/speak", label: "랜덤 스피킹", icon: "dice" },
   { to: "/study/words", label: "단어 게임", icon: "keyboard" },
+  { to: "/study/history", label: "학습 기록", tab: "기록", icon: "compare" },
+  { to: "/study/planner", label: "플래너", tab: "플래너", icon: "timer" },
 ];
 
 /** 서비스 화면 틀: 사이트 헤더 · 푸터 없이 왼쪽 레일 + 가운데 학습 + 오른쪽 현황 */
@@ -43,10 +48,6 @@ export function AppShell({ uid, game, tokens, plan, onEditPrefs, children }: Pro
           {n.label}
         </NavLink>
       ))}
-      <span className="rail-item soon" title="곧 열려요">
-        <Icon name="clipboard" size={30} />
-        모의고사<em>곧</em>
-      </span>
       <Link className="rail-item" to="/membership">
         <Icon name="gem" size={30} />
         요금제
@@ -100,10 +101,10 @@ export function AppShell({ uid, game, tokens, plan, onEditPrefs, children }: Pro
       {deleting && <DeleteAccountDialog onClose={() => setDeleting(false)} />}
 
       <nav className="tabbar" aria-label="학습 메뉴">
-        {NAV.map((n) => (
+        {NAV.filter((n) => n.tab).map((n) => (
           <NavLink key={n.to} to={n.to} end={n.end} className="tab" onClick={() => play("tap", { volume: 0.4 })}>
-            <Icon name={n.icon} size={28} />
-            <span>{n.label}</span>
+            <Icon name={n.icon} size={26} />
+            <span>{n.tab}</span>
           </NavLink>
         ))}
       </nav>

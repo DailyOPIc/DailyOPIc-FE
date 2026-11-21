@@ -4,7 +4,11 @@ import type { Evaluation, QuestionSet } from "../lib/api";
 import type { GameState, Recorded } from "../lib/game";
 import { quickCheck } from "../lib/quickcheck";
 import { AppShell } from "./AppShell";
+import { HistoryStats } from "./HistoryStats";
 import { Lesson } from "./Lesson";
+import { MockExam, type Phase } from "./MockExam";
+import { Planner } from "./Planner";
+import { Vocabulary } from "./Vocabulary";
 import { Onboarding } from "./Onboarding";
 import { PathHome } from "./PathHome";
 import { RandomSpeak } from "./RandomSpeak";
@@ -42,6 +46,33 @@ const QC = quickCheck(
   42,
 );
 
+const PREFS = { initialLevel: 5, survey: { status: "student", residence: "family", leisure: ["movies", "cafes"], hobbies: [], sports: ["jogging"], travel: [] } };
+const MOCK_SESSION = {
+  sessionId: "dev",
+  sessionHash: "dev",
+  stage: "answering_tail" as const,
+  setId: "dev-set",
+  questionSet: { ...SET, questions: [{ ...SET.questions[0], number: 1 }, ...SET.questions] },
+};
+const MOCK_RESULT = {
+  ...EVAL,
+  targetGap: "IH까지는 이유와 예시를 더 길게 이어 말하는 연습이 필요해요.",
+  overallFeedback: "질문 의도에 맞게 답했고 문장도 안정적이에요. 답변 길이를 늘리면 한 단계 올라갈 수 있어요.",
+  perQuestion: SET.questions.map((q) => ({ number: q.number, feedback: "핵심은 말했지만 예시가 짧아요.", sampleAnswer: "There is a small garden behind the library where I like to sit." })),
+};
+function seedHistory() {
+  const levels = ["IL", "IM1", "IM1", "IM2", "IM2", "IM3", "IH"] as const;
+  const list = levels.map((level, i) => ({
+    kind: i === 5 ? "mock" : "practice",
+    at: i,
+    day: `2026-11-${String(10 + i * 2).padStart(2, "0")}`,
+    level,
+    scores: { ...EVAL.scores, grammar: 50 + i * 5 },
+    prompt: i === 5 ? "실전 모의고사" : "Describe a place on campus where you like to sit for a few minutes.",
+  }));
+  localStorage.setItem("dailyopic:history:dev", JSON.stringify(list));
+}
+
 export function DevPreview() {
   const view = new URLSearchParams(window.location.search).get("view") ?? "path";
   const [results, setResults] = useState<Record<number, Evaluation>>({ 2: EVAL, 3: { ...EVAL, predictedLevel: "IH" } });
@@ -67,7 +98,22 @@ export function DevPreview() {
     );
   return (
     <AppShell uid="dev" game={GAME} tokens={1} plan={new URLSearchParams(window.location.search).get("plan") ?? "free"} onEditPrefs={() => {}}>
-      {view === "words" ? (
+      {view === "mock" ? (
+        <MockExam
+          uid="dev"
+          prefs={PREFS}
+          usage={{ freeRemaining: 1, bonusRemaining: 0, mockAvailable: true, mockRemaining: 1 }}
+          onChanged={() => {}}
+          onReward={() => {}}
+          dev={{ phase: (new URLSearchParams(window.location.search).get("phase") ?? "intro") as Phase, session: MOCK_SESSION, result: MOCK_RESULT }}
+        />
+      ) : view === "history" ? (
+        (seedHistory(), <HistoryStats uid="dev" game={GAME} />)
+      ) : view === "planner" ? (
+        (seedHistory(), <Planner uid="dev" />)
+      ) : view === "vocab" ? (
+        <Vocabulary uid="dev" prefs={PREFS} onSpent={() => {}} />
+      ) : view === "words" ? (
         <WordGames uid="dev" plan={new URLSearchParams(window.location.search).get("plan") ?? "free"} onReward={() => REWARD} onLimitUse={() => {}} />
       ) : view === "speak" ? (
         <RandomSpeak uid="dev" plan={new URLSearchParams(window.location.search).get("plan") ?? "free"} prefs={{ initialLevel: 5, survey: { status: "student", residence: "family", leisure: ["movies", "cafes"], hobbies: [], sports: ["jogging"], travel: [] } }} onReward={() => REWARD} onLimitUse={() => {}} />

@@ -3,15 +3,20 @@ import { Navigate, useLocation } from "react-router-dom";
 import { Mascot } from "../assets/Mascot";
 import { api, type ApiError, type Evaluation, type QuestionSet, type Usage } from "../lib/api";
 import { useAuth } from "../lib/auth";
+import { addHistory } from "../lib/history";
 import { loadGame, recordActivity, XP, type GameState, type Recorded } from "../lib/game";
 import { loadPrefs, savePrefs, type StudyPrefs } from "../lib/prefs";
 import type { QuickCheck } from "../lib/quickcheck";
 import { play, warmUp } from "../lib/sfx";
 import { AppShell } from "./AppShell";
+import { HistoryStats } from "./HistoryStats";
 import { Lesson } from "./Lesson";
+import { MockExam } from "./MockExam";
 import { Onboarding } from "./Onboarding";
 import { PathHome } from "./PathHome";
+import { Planner } from "./Planner";
 import { RandomSpeak } from "./RandomSpeak";
+import { Vocabulary } from "./Vocabulary";
 import { WordGames } from "./WordGames";
 import "./app.css";
 
@@ -47,7 +52,7 @@ export function StudyApp() {
 
 function Study({ uid }: { uid: string }) {
   const { pathname } = useLocation();
-  const view = pathname.startsWith("/study/speak") ? "speak" : pathname.startsWith("/study/words") ? "words" : "path";
+  const view = (["speak", "words", "mock", "vocab", "history", "planner"] as const).find((v) => pathname.startsWith(`/study/${v}`)) ?? "path";
   const [prefs, setPrefs] = useState<StudyPrefs | null>(() => loadPrefs(uid));
   const [editing, setEditing] = useState(false);
   const [set, setSet] = useState<QuestionSet | null>(null);
@@ -118,7 +123,8 @@ function Study({ uid }: { uid: string }) {
   }, [prefs]);
 
   // 단어 게임은 단계 · 설문이 필요 없다(도전장으로 처음 온 사람도 바로 대결)
-  if ((!prefs && view !== "words") || editing)
+  // 단어 게임 · 기록 · 플래너는 설문 없이도 열린다
+  if ((!prefs && (view === "path" || view === "speak" || view === "mock" || view === "vocab")) || editing)
     return (
       <Onboarding
         initial={prefs}
@@ -161,6 +167,7 @@ function Study({ uid }: { uid: string }) {
           const next = { ...results, [number]: evaluation };
           setResults(next);
           saveJSON(K.results(set.setId), next);
+          addHistory(uid, { kind: "practice", level: evaluation.predictedLevel, scores: evaluation.scores, prompt: set.questions.find((q) => q.number === number)?.prompt });
           void refreshUsage();
           return reward(XP.aiAnswer);
         }}
@@ -186,6 +193,10 @@ function Study({ uid }: { uid: string }) {
 
   let content: ReactNode;
   if (view === "speak" && prefs) content = <RandomSpeak uid={uid} plan={plan} prefs={prefs} onReward={reward} onLimitUse={onLimitUse} />;
+  else if (view === "mock" && prefs) content = <MockExam uid={uid} prefs={prefs} usage={usage} onChanged={() => void refreshUsage()} onReward={reward} />;
+  else if (view === "vocab" && prefs) content = <Vocabulary uid={uid} prefs={prefs} onSpent={() => void refreshUsage()} />;
+  else if (view === "history") content = <HistoryStats uid={uid} game={game} />;
+  else if (view === "planner") content = <Planner uid={uid} />;
   else if (view === "words") content = <WordGames uid={uid} plan={plan} onReward={reward} onLimitUse={onLimitUse} />;
   else if (set)
     content = (
