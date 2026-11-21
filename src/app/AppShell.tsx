@@ -2,6 +2,7 @@ import { useState, type ReactNode } from "react";
 import { Link, NavLink } from "react-router-dom";
 import { Icon, type IconName } from "../assets/Icon";
 import { Mascot } from "../assets/Mascot";
+import { DeleteAccountDialog } from "./DeleteAccount";
 import { signOut } from "../lib/auth";
 import { DAILY_GOAL, type GameState } from "../lib/game";
 import { FREE_DAILY, LIMIT_LABEL, used, type LimitKind } from "../lib/limits";
@@ -26,6 +27,7 @@ const NAV: { to: string; label: string; icon: IconName; end?: boolean }[] = [
 export function AppShell({ uid, game, tokens, plan, onEditPrefs, children }: Props) {
   const [menu, setMenu] = useState(false);
   const [muted, setMute] = useState(isMuted);
+  const [deleting, setDeleting] = useState(false);
 
   const toggleMute = () => {
     setMuted(!muted);
@@ -62,6 +64,10 @@ export function AppShell({ uid, game, tokens, plan, onEditPrefs, children }: Pro
         <Icon name="door" size={26} />
         로그아웃
       </button>
+      <button className="rail-item small danger" onClick={() => setDeleting(true)}>
+        <Icon name="close" size={26} />
+        계정 삭제
+      </button>
     </>
   );
 
@@ -91,6 +97,7 @@ export function AppShell({ uid, game, tokens, plan, onEditPrefs, children }: Pro
       </header>
 
       <main className="app-main">{children}</main>
+      {deleting && <DeleteAccountDialog onClose={() => setDeleting(false)} />}
 
       <nav className="tabbar" aria-label="학습 메뉴">
         {NAV.map((n) => (

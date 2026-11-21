@@ -106,6 +106,7 @@ async function request<T>(
     const detail = typeof body.detail === "object" && body.detail ? body.detail : {};
     throw new ApiError(response.status, detail.code, detail.message ?? messageFor(response.status));
   }
+  if (response.status === 204) return undefined as T;
   return response.json() as Promise<T>;
 }
 
@@ -119,6 +120,8 @@ function messageFor(status: number) {
 export const api = {
   capabilities: () => request<Capabilities>("/v1/capabilities"),
   usage: () => request<Usage>("/v1/usage"),
+  /** 계정 삭제: 서버의 학습 기록 · 사용량 · 웹 이용권 · 토큰과 로그인 계정을 지운다(결제 기록은 보존). */
+  deleteAccount: () => request<void>("/v1/users/me", { method: "DELETE" }),
   wallet: () => request<Wallet>("/v1/web-payments/wallet"),
   createOrder: (productId: string) =>
     request<WebOrder>("/v1/web-payments/orders", { method: "POST", json: { productId } }),
