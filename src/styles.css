@@ -1182,8 +1182,15 @@ h3 {
 }
 .grade-roll-window {
   display: block;
+  flex-shrink: 0;
   height: 64px;
   overflow: hidden;
+}
+/* 아주 좁은 폰(320px)에서 굴러가는 IM1·IM2·IM3의 앞글자가 잘리지 않게 */
+@media (max-width: 360px) {
+  .grade-roll {
+    font-size: 46px;
+  }
 }
 .grade-roll {
   display: flex;
