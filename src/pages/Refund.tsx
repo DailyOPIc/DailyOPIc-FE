@@ -16,7 +16,7 @@ export function Refund() {
       <h2>1. 적용 대상</h2>
       <ul>
         <li>웹사이트(www.dailyopic.link)에서 결제한 이용권(예: 베이직 · 플러스 · 프로 30일 이용권)</li>
-        <li>iPhone 앱에서 App Store로 결제한 구독은 아래 4항을 따릅니다.</li>
+        <li>iPhone 앱에서 App Store로 결제한 구독은 아래 5항을 따릅니다.</li>
       </ul>
 
       <h2>2. 웹 이용권 환불 기준</h2>
@@ -31,7 +31,14 @@ export function Refund() {
         <li>서비스 장애 등 서비스의 책임으로 이용하지 못한 기간은 이용 일수에서 빼고 계산합니다.</li>
       </ol>
 
-      <h2>3. 환불 신청과 처리</h2>
+      <h2>3. 서비스 제공(배송) 정책</h2>
+      <ul>
+        <li>모든 상품은 온라인으로 제공되는 디지털 이용권이며 별도의 실물 배송이 없습니다.</li>
+        <li>결제가 완료되면 결제한 계정에 즉시 적용되어 바로 이용할 수 있습니다.</li>
+        <li>30일 이용권의 이용 기간은 결제(적용) 시점부터 30일입니다.</li>
+      </ul>
+
+      <h2>4. 환불 신청과 처리</h2>
       <ul>
         <li>
           고객센터 이메일 <a href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a>로 로그인한 계정의 이메일, 결제일,
@@ -41,7 +48,7 @@ export function Refund() {
         <li>환불이 완료되면 해당 이용권은 즉시 사용할 수 없게 됩니다.</li>
       </ul>
 
-      <h2>4. App Store 구독</h2>
+      <h2>5. App Store 구독</h2>
       <ul>
         <li>
           iPhone 앱에서 결제한 구독의 해지와 환불은 Apple 정책을 따릅니다. iPhone의 설정 → Apple 계정 → 구독에서
@@ -50,7 +57,7 @@ export function Refund() {
         <li>구독은 다음 결제일 24시간 전까지 해지하지 않으면 자동으로 갱신됩니다.</li>
       </ul>
 
-      <h2>5. 문의</h2>
+      <h2>6. 문의</h2>
       <p>
         환불과 결제 관련 문의는 <a href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a>로 보내 주세요. 자주 묻는 질문은{" "}
         <Link to="/help">고객센터</Link>에서 확인할 수 있어요.

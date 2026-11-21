@@ -23,8 +23,11 @@ export function Footer() {
           </nav>
         </div>
         <dl className="business">
+          <div><dt>상호</dt><dd>{BUSINESS.name}</dd></div>
           <div><dt>대표자</dt><dd>{BUSINESS.owner}</dd></div>
           <div><dt>사업자등록번호</dt><dd>{BUSINESS.registration}</dd></div>
+          <div><dt>사업장 주소</dt><dd>{BUSINESS.address}</dd></div>
+          <div><dt>대표전화</dt><dd><a href={`tel:${BUSINESS.phone}`}>{BUSINESS.phone}</a></dd></div>
           <div><dt>이메일</dt><dd><a href={`mailto:${BUSINESS.email}`}>{BUSINESS.email}</a></dd></div>
         </dl>
         <p className="copyright">© {new Date().getFullYear()} DailyOPIc. All rights reserved.</p>
