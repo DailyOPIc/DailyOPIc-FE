@@ -1,5 +1,5 @@
 import { useEffect, useState, type CSSProperties } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { AppStoreButton } from "../components/Bits";
 import { api, type Wallet } from "../lib/api";
 import { useAuth } from "../lib/auth";
@@ -195,6 +195,9 @@ export function Membership() {
           <li>
             App Store에서 결제한 구독의 해지와 환불은 Apple 정책을 따라요. iPhone의 설정 → Apple ID → 구독에서 관리할 수
             있어요.
+          </li>
+          <li>
+            자세한 기준은 <Link to="/refund">환불 규정</Link>에서 확인할 수 있어요.
           </li>
         </ul>
       </section>
