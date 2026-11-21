@@ -1,4 +1,5 @@
 import { auth, appCheckToken } from "./firebase";
+import { inApp, nativeHeaders } from "./native";
 
 const BASE_URL =
   (import.meta.env.VITE_API_BASE_URL as string | undefined) ??
@@ -117,6 +118,13 @@ export class ApiError extends Error {
 }
 
 async function headers(idempotencyKey?: string): Promise<Record<string, string>> {
+  if (inApp) {
+    // iOS 앱 안: 앱의 로그인 · App Check 토큰을 그대로 쓴다(서버는 iOS 앱 요청으로 본다).
+    const n = await nativeHeaders();
+    const result: Record<string, string> = { Authorization: n.authorization, "X-Firebase-AppCheck": n.appCheck, "X-DailyOPIc-Client": "ios-app" };
+    if (idempotencyKey) result["Idempotency-Key"] = idempotencyKey;
+    return result;
+  }
   const user = auth.currentUser;
   if (!user) throw new ApiError(401, "signed_out", "로그인이 필요해요.");
   const [idToken, appCheck] = await Promise.all([user.getIdToken(), appCheckToken()]);

@@ -5,6 +5,7 @@ import { Mascot } from "../assets/Mascot";
 import { CoachMarks } from "./CoachMarks";
 import { DeleteAccountDialog } from "./DeleteAccount";
 import { signOut } from "../lib/auth";
+import { callNative, inApp } from "../lib/native";
 import { DAILY_GOAL, type GameState } from "../lib/game";
 import { FREE_DAILY, LIMIT_LABEL, used, type LimitKind } from "../lib/limits";
 import { isMuted, play, setMuted } from "../lib/sfx";
@@ -60,14 +61,24 @@ export function AppShell({ uid, game, tokens, plan, onEditPrefs, children }: Pro
         <Icon name={muted ? "soundOff" : "soundOn"} size={26} />
         효과음 {muted ? "끔" : "켬"}
       </button>
-      <button className="rail-item small" onClick={() => void signOut()}>
-        <Icon name="door" size={26} />
-        로그아웃
-      </button>
-      <button className="rail-item small danger" onClick={() => setDeleting(true)}>
-        <Icon name="close" size={26} />
-        계정 삭제
-      </button>
+      {inApp ? (
+        // 앱 안: 로그인 연결 · 계정 삭제(Apple 토큰 폐기 포함)는 앱의 계정 화면이 맡는다
+        <button className="rail-item small" onClick={() => void callNative("openAccount")}>
+          <Icon name="door" size={26} />
+          계정 · 로그인
+        </button>
+      ) : (
+        <>
+          <button className="rail-item small" onClick={() => void signOut()}>
+            <Icon name="door" size={26} />
+            로그아웃
+          </button>
+          <button className="rail-item small danger" onClick={() => setDeleting(true)}>
+            <Icon name="close" size={26} />
+            계정 삭제
+          </button>
+        </>
+      )}
     </>
   );
 

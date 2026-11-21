@@ -4,6 +4,7 @@ import { Mascot } from "../assets/Mascot";
 import { api, type ApiError, type Evaluation, type QuestionSet, type Usage } from "../lib/api";
 import { useAuth } from "../lib/auth";
 import { loadGame, recordActivity, XP, type GameState, type Recorded } from "../lib/game";
+import { REFRESH_EVENT } from "../lib/native";
 import { loadPrefs, savePrefs, type StudyPrefs } from "../lib/prefs";
 import type { QuickCheck } from "../lib/quickcheck";
 import { play, warmUp } from "../lib/sfx";
@@ -76,10 +77,16 @@ function Study({ uid }: { uid: string }) {
     [uid],
   );
 
-  // 플랜은 단계 · 설문과 상관없이 늘 필요하다(무료 한도 판단)
+  // 플랜은 단계 · 설문과 상관없이 늘 필요하다(무료 한도 판단). 앱에서 결제 화면을 닫으면 다시 읽는다.
   useEffect(() => {
-    api.capabilities().then((c) => setPlan(c.plan)).catch(() => {});
-  }, []);
+    const load = () => {
+      api.capabilities().then((c) => setPlan(c.plan)).catch(() => {});
+      void refreshUsage();
+    };
+    load();
+    window.addEventListener(REFRESH_EVENT, load);
+    return () => window.removeEventListener(REFRESH_EVENT, load);
+  }, [refreshUsage]);
 
   useEffect(() => {
     // 첫 입력 때 효과음을 미리 풀어 둔다(브라우저 자동 재생 정책)
