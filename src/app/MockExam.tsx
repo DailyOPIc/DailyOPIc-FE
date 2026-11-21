@@ -264,7 +264,6 @@ export function MockExam({ prefs, usage, onChanged, onReward, dev }: Props) {
           </ol>
         </section>
         )}
-        <p className="detail-hint">{result.disclaimer}</p>
         <div className="row-actions">
           <Link to="/study" className="btn btn-primary">오늘의 학습으로</Link>
         </div>
