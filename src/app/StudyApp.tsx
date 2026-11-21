@@ -5,6 +5,7 @@ import { api, type ApiError, type Evaluation, type QuestionSet, type Usage } fro
 import { useAuth } from "../lib/auth";
 import { loadGame, recordActivity, XP, type GameState, type Recorded } from "../lib/game";
 import { REFRESH_EVENT } from "../lib/native";
+import { canWatchAd, claimActivityToken, watchAdForToken } from "../lib/tokens";
 import { loadPrefs, savePrefs, type StudyPrefs } from "../lib/prefs";
 import type { QuickCheck } from "../lib/quickcheck";
 import { play, warmUp } from "../lib/sfx";
@@ -72,6 +73,7 @@ function Study({ uid }: { uid: string }) {
     (xp: number): Recorded => {
       const r = recordActivity(uid, xp);
       setGame(r.state);
+      if (r.goalJustReached) void claimActivityToken("goal", "오늘의 목표 달성");
       return r;
     },
     [uid],
@@ -187,7 +189,9 @@ function Study({ uid }: { uid: string }) {
     } catch (e) {
       const err = e as ApiError;
       play("wrong", { volume: 0.5 });
-      window.alert(err.isQuotaExhausted ? "오늘의 데일리 토큰을 모두 썼어요. 자정에 다시 채워져요." : err.message);
+      if (err.isQuotaExhausted && canWatchAd(plan)) {
+        if (window.confirm("오늘의 토큰을 모두 썼어요. 광고를 보고 토큰 1개를 받을까요?")) void watchAdForToken();
+      } else window.alert(err.isQuotaExhausted ? "오늘의 데일리 토큰을 모두 썼어요. 자정에 다시 채워져요." : err.message);
     } finally {
       setBusy(false);
       void refreshUsage();
@@ -215,6 +219,7 @@ function Study({ uid }: { uid: string }) {
           saveJSON(K.chests(set.setId), next);
           reward(15);
           play("fanfare");
+          void claimActivityToken("chest", "보물상자");
         }}
       />
     );

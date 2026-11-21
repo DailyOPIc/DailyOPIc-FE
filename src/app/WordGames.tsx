@@ -1,3 +1,4 @@
+import { claimActivityToken } from "../lib/tokens";
 import { useMemo, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { Icon } from "../assets/Icon";
@@ -50,6 +51,7 @@ export function WordGames({ uid, plan, onReward, onLimitUse }: Props) {
     saveBest(s.mode, s.score);
     setReward(onReward(XP.practice + s.correct * XP.wordCorrect));
     setSummary(s);
+    void claimActivityToken("game", "오픽게임 한 판");
   };
   const exit = () => {
     setRun(null);

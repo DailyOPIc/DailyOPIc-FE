@@ -6,6 +6,7 @@ import { CoachMarks } from "./CoachMarks";
 import { DeleteAccountDialog } from "./DeleteAccount";
 import { signOut } from "../lib/auth";
 import { callNative, inApp } from "../lib/native";
+import { canWatchAd, watchAdForToken } from "../lib/tokens";
 import { DAILY_GOAL, type GameState } from "../lib/game";
 import { FREE_DAILY, LIMIT_LABEL, used, type LimitKind } from "../lib/limits";
 import { isMuted, play, setMuted } from "../lib/sfx";
@@ -96,7 +97,16 @@ export function AppShell({ uid, game, tokens, plan, onEditPrefs, children }: Pro
         <Link to="/" className="topbar-logo" aria-label="데일리오픽 홈">
           <img src="/images/logo-mark.png" alt="" width={30} height={30} />
         </Link>
-        <Stats game={game} tokens={tokens} compact />
+        <Stats
+          game={game}
+          tokens={tokens}
+          compact
+          onToken={
+            canWatchAd(plan)
+              ? () => window.confirm("광고를 보고 오늘 쓸 토큰 1개를 받을까요?") && void watchAdForToken()
+              : undefined
+          }
+        />
         <button className="icon-btn" aria-expanded={menu} aria-label="메뉴" onClick={() => setMenu((v) => !v)}>
           <Icon name={menu ? "close" : "menu"} size={24} />
         </button>
@@ -148,7 +158,7 @@ export function AppShell({ uid, game, tokens, plan, onEditPrefs, children }: Pro
   );
 }
 
-function Stats({ game, tokens, compact }: { game: GameState; tokens: number | null; compact?: boolean }) {
+function Stats({ game, tokens, compact, onToken }: { game: GameState; tokens: number | null; compact?: boolean; onToken?: () => void }) {
   return (
     <div className={compact ? "stats-row compact" : "stats-row"}>
       <span className={`stat-chip streak${game.streak > 0 ? " lit" : ""}`} title="연속 학습일" data-coach="streak">
@@ -157,9 +167,17 @@ function Stats({ game, tokens, compact }: { game: GameState; tokens: number | nu
       <span className="stat-chip xp" title="경험치" data-coach="xp">
         <Icon name="bolt" size={compact ? 22 : 26} /> <b>{game.xp}</b>
       </span>
-      <span className="stat-chip token" title="오늘 남은 토큰" data-coach="token">
-        <Icon name="coin" size={compact ? 22 : 26} /> <b>{tokens ?? "–"}</b>
-      </span>
+      {onToken ? (
+        // 앱(무료): 토큰을 누르면 광고 보고 1개 더 받기
+        <button className="stat-chip token" title="광고 보고 토큰 받기" data-coach="token" onClick={onToken}>
+          <Icon name="coin" size={compact ? 22 : 26} /> <b>{tokens ?? "–"}</b>
+          <span className="chip-plus" aria-hidden="true">+</span>
+        </button>
+      ) : (
+        <span className="stat-chip token" title="오늘 남은 토큰" data-coach="token">
+          <Icon name="coin" size={compact ? 22 : 26} /> <b>{tokens ?? "–"}</b>
+        </span>
+      )}
     </div>
   );
 }

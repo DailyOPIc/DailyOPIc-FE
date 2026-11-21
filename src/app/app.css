@@ -3845,3 +3845,47 @@
 .activity-page .stat-box span {
   white-space: nowrap;
 }
+
+/* 토큰 보상 알림 · 앱의 토큰 칩(광고 보고 받기) */
+.token-toast {
+  position: fixed;
+  top: calc(12px + env(safe-area-inset-top));
+  left: 50%;
+  z-index: 1500;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 18px 10px 12px;
+  border-radius: 999px;
+  background: #fff;
+  box-shadow: 0 12px 30px -10px rgba(17, 24, 39, 0.35);
+  font-size: 15px;
+  white-space: nowrap;
+  transform: translateX(-50%);
+  animation: toast-in 0.4s var(--ease-out);
+}
+.token-toast b {
+  color: var(--gold-deep);
+  margin-right: 4px;
+}
+@keyframes toast-in {
+  from { opacity: 0; transform: translate(-50%, -16px); }
+}
+button.stat-chip {
+  border: 0;
+  font: inherit;
+  cursor: pointer;
+}
+.chip-plus {
+  display: grid;
+  place-items: center;
+  width: 18px;
+  height: 18px;
+  margin-left: 2px;
+  border-radius: 50%;
+  background: var(--gold);
+  color: #fff;
+  font-size: 14px;
+  font-weight: 900;
+  line-height: 1;
+}

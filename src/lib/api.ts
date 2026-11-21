@@ -167,6 +167,9 @@ export const api = {
   /** 계정 삭제: 서버의 학습 기록 · 사용량 · 웹 이용권 · 토큰과 로그인 계정을 지운다(결제 기록은 보존). */
   deleteAccount: () => request<void>("/v1/users/me", { method: "DELETE" }),
   wallet: () => request<Wallet>("/v1/web-payments/wallet"),
+  /** 활동 보상: 하루 한도 안에서 보너스 토큰 1개(보물상자 2 · 게임 1 · 하루 목표 1) */
+  activityReward: (kind: "chest" | "game" | "goal") =>
+    request<{ granted: boolean; bonusRemaining: number }>("/v1/activity-rewards", { method: "POST", json: { kind } }),
   // 모의고사: 회차 생성(진행 중이면 이어서) → 시작 → 7번 뒤 난이도 조정 → 15문항 채점
   mockCreate: (body: { initialLevel: number; survey: Survey }, key: string) =>
     request<MockSession>("/v1/mock-exams/sessions", { method: "POST", json: { ...body, background: {} }, idempotencyKey: key }),
