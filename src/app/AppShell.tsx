@@ -2,6 +2,7 @@ import { useState, type ReactNode } from "react";
 import { Link, NavLink } from "react-router-dom";
 import { Icon, type IconName } from "../assets/Icon";
 import { Mascot } from "../assets/Mascot";
+import { CoachMarks } from "./CoachMarks";
 import { DeleteAccountDialog } from "./DeleteAccount";
 import { signOut } from "../lib/auth";
 import { DAILY_GOAL, type GameState } from "../lib/game";
@@ -21,11 +22,9 @@ type Props = {
 const NAV: { to: string; label: string; tab?: string; icon: IconName; end?: boolean }[] = [
   { to: "/study", label: "오늘의 학습", tab: "학습", icon: "mic", end: true },
   { to: "/study/mock", label: "모의고사", tab: "모의고사", icon: "clipboard" },
-  { to: "/study/vocab", label: "단어장", tab: "단어장", icon: "book" },
-  { to: "/study/speak", label: "랜덤 스피킹", icon: "dice" },
-  { to: "/study/words", label: "단어 게임", icon: "keyboard" },
-  { to: "/study/history", label: "학습 기록", tab: "기록", icon: "compare" },
-  { to: "/study/planner", label: "플래너", tab: "플래너", icon: "timer" },
+  { to: "/study/words", label: "오픽게임", tab: "오픽게임", icon: "keyboard" },
+  { to: "/study/speak", label: "랜덤 스피킹", tab: "스피킹", icon: "dice" },
+  { to: "/study/activity", label: "활동", icon: "flame" },
 ];
 
 /** 서비스 화면 틀: 사이트 헤더 · 푸터 없이 왼쪽 레일 + 가운데 학습 + 오른쪽 현황 */
@@ -99,6 +98,7 @@ export function AppShell({ uid, game, tokens, plan, onEditPrefs, children }: Pro
 
       <main className="app-main">{children}</main>
       {deleting && <DeleteAccountDialog onClose={() => setDeleting(false)} />}
+      <CoachMarks uid={uid} />
 
       <nav className="tabbar" aria-label="학습 메뉴">
         {NAV.filter((n) => n.tab).map((n) => (
@@ -140,13 +140,13 @@ export function AppShell({ uid, game, tokens, plan, onEditPrefs, children }: Pro
 function Stats({ game, tokens, compact }: { game: GameState; tokens: number | null; compact?: boolean }) {
   return (
     <div className={compact ? "stats-row compact" : "stats-row"}>
-      <span className={`stat-chip streak${game.streak > 0 ? " lit" : ""}`} title="연속 학습일">
+      <span className={`stat-chip streak${game.streak > 0 ? " lit" : ""}`} title="연속 학습일" data-coach="streak">
         <Icon name="flame" size={compact ? 22 : 26} /> <b>{game.streak}</b>
       </span>
-      <span className="stat-chip xp" title="경험치">
+      <span className="stat-chip xp" title="경험치" data-coach="xp">
         <Icon name="bolt" size={compact ? 22 : 26} /> <b>{game.xp}</b>
       </span>
-      <span className="stat-chip token" title="오늘 남은 AI 분석 토큰">
+      <span className="stat-chip token" title="오늘 남은 토큰" data-coach="token">
         <Icon name="coin" size={compact ? 22 : 26} /> <b>{tokens ?? "–"}</b>
       </span>
     </div>

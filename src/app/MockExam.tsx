@@ -3,7 +3,6 @@ import { Link } from "react-router-dom";
 import { Icon } from "../assets/Icon";
 import { Mascot } from "../assets/Mascot";
 import { api, type ApiError, type Evaluation, type MockEvaluation, type MockSession, type Question, type Usage } from "../lib/api";
-import { addHistory } from "../lib/history";
 import type { StudyPrefs } from "../lib/prefs";
 import { speak, speechSupported, useAnswerRecorder } from "../lib/recorder";
 import { play } from "../lib/sfx";
@@ -15,7 +14,6 @@ import { ResultDetail } from "./ResultDetail";
 export type Phase = "intro" | "loading" | "answer" | "adjust" | "result" | "limit";
 type Answer = { transcript: string; audio: Blob };
 type Props = {
-  uid: string;
   prefs: StudyPrefs;
   usage: Usage | null;
   onChanged: () => void;
@@ -44,7 +42,7 @@ async function retrying<T>(fn: () => Promise<T>): Promise<T> {
   }
 }
 
-export function MockExam({ uid, prefs, usage, onChanged, onReward, dev }: Props) {
+export function MockExam({ prefs, usage, onChanged, onReward, dev }: Props) {
   const [phase, setPhase] = useState<Phase>(dev?.phase ?? "intro");
   const [loadingText, setLoadingText] = useState("");
   const [session, setSession] = useState<MockSession | null>(dev?.session ?? null);
@@ -162,7 +160,6 @@ export function MockExam({ uid, prefs, usage, onChanged, onReward, dev }: Props)
         ),
       );
       setResult(r);
-      addHistory(uid, { kind: "mock", level: r.predictedLevel, scores: r.scores, prompt: "실전 모의고사" });
       onReward(50);
       play("fanfare");
       setPhase("result");
@@ -235,7 +232,7 @@ export function MockExam({ uid, prefs, usage, onChanged, onReward, dev }: Props)
         </div>
         <div className="row-actions">
           <Link to="/membership" className="btn btn-primary">요금제 보기</Link>
-          <Link to="/study/history" className="btn btn-ghost">학습 기록 보기</Link>
+          <Link to="/study/words" className="btn btn-ghost">오픽게임 하러 가기</Link>
         </div>
       </div>
     );
@@ -266,7 +263,7 @@ export function MockExam({ uid, prefs, usage, onChanged, onReward, dev }: Props)
         </section>
         <p className="detail-hint">{result.disclaimer}</p>
         <div className="row-actions">
-          <Link to="/study/history" className="btn btn-primary">학습 기록 보기</Link>
+          <Link to="/study" className="btn btn-primary">오늘의 학습으로</Link>
         </div>
       </div>
     );

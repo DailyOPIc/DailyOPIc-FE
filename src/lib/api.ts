@@ -76,30 +76,6 @@ export type MockEvaluation = {
   warnings: string[];
 };
 
-export type StudyPlan = {
-  examDate?: string | null;
-  studyWeekdays: number[]; // 1=월 … 7=일
-  intensity: "light" | "steady" | "focused";
-  preferredStudyTime: string; // "21:00"
-  timezoneIdentifier: string;
-};
-
-export type VocabEntry = {
-  id: string;
-  term: string;
-  type: "word" | "phrase" | "pattern";
-  meaningKo: string;
-  exampleEn: string;
-  exampleKo: string;
-  collocations: string[];
-};
-export type VocabSet = { setId: string; topic: string; targetLevel: OPIcLevel; entries: VocabEntry[] };
-export type VocabCoach = {
-  usageAssessment: string;
-  usageFeedbackKo: string;
-  naturalCorrectionEn: string;
-};
-
 export type Wallet = {
   plan: string;
   webPass: { plan: string; expiresAt: string } | null;
@@ -217,14 +193,6 @@ export const api = {
   /** 모의고사 게이트 통과 증표. 웹은 광고 없이 바로 verified로 나온다. */
   rewardIntent: (purpose: "mock_start" | "mock_adjustment" | "mock_result", sessionHash: string) =>
     request<{ nonce: string; status: string }>("/v1/ad-rewards/intents", { method: "POST", json: { purpose, sessionHash } }),
-  studyPlan: () => request<{ configured: boolean; studyPlan: StudyPlan | null }>("/v1/users/me/study-plan"),
-  saveStudyPlan: (plan: StudyPlan) =>
-    request<{ configured: boolean; studyPlan: StudyPlan }>("/v1/users/me/study-plan", { method: "PUT", json: plan }),
-  // 단어장 생성 · 코칭은 각각 데일리 토큰 1개를 쓴다
-  vocabToday: (body: { topic: string; targetLevel: OPIcLevel; excludeTerms: string[] }, key: string) =>
-    request<VocabSet>("/v1/vocabulary/today/generate", { method: "POST", json: body, idempotencyKey: key }),
-  vocabCoach: (body: { entryId: string; term: string; type: VocabEntry["type"]; transcript: string; meaningKo: string; topic: string; targetLevel: OPIcLevel }, key: string) =>
-    request<VocabCoach>("/v1/vocabulary/coach", { method: "POST", json: body, idempotencyKey: key }),
   createOrder: (productId: string) =>
     request<WebOrder>("/v1/web-payments/orders", { method: "POST", json: { productId } }),
   confirmPayment: (body: { paymentKey: string; orderId: string; amount: number }) =>

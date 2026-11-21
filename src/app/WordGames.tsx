@@ -96,7 +96,7 @@ export function WordGames({ uid, plan, onReward, onLimitUse }: Props) {
           <Mascot mood="happy" size={96} />
           <div>
             <p className="eyebrow">무료 · 무제한</p>
-            <h1>단어 게임</h1>
+            <h1>오픽게임</h1>
             <p className="lead">OPIc 답변에 바로 쓰는 표현 {EXPRESSIONS.length}개를 게임으로 익히고, 친구와 기록 대결도 해요.</p>
           </div>
         </div>
