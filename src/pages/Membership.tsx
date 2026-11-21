@@ -114,7 +114,7 @@ export function Membership() {
       {enabled && tokenPacksEnabled && (
         <section className="container token-packs" id="tokens">
           <h2 className="section-title">토큰만 더 필요할 때</h2>
-          <p className="lead">하루 토큰을 다 쓰면 보유 토큰에서 하나씩 써요. 매일 사라지지 않아요.</p>
+          <p className="lead">하루 토큰을 다 쓰면 보유 토큰에서 하나씩 써요. 매일 사라지지 않고, 웹(www.dailyopic.link)에서만 사용할 수 있어요.</p>
           <div className="token-grid">
             {TOKEN_PRODUCTS.map((t) => (
               <article key={t.id} className="token-card">
