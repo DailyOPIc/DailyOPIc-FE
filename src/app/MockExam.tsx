@@ -247,6 +247,8 @@ export function MockExam({ prefs, usage, onChanged, onReward, dev }: Props) {
         </div>
         {/* 모의고사 결과는 플랜과 상관없이 전체를 보여 준다 */}
         <ResultDetail evaluation={{ ...result, answerQuality: "gradable" } as unknown as Evaluation} plan="mock" />
+        {/* 서버 채점은 15문항을 한꺼번에 본다(문항별 피드백은 지금 만들지 않음) — 비어 있으면 칸을 숨긴다 */}
+        {result.perQuestion.length > 0 && (
         <section className="detail-card">
           <h3>문항별 피드백</h3>
           <ol className="mock-per">
@@ -261,6 +263,7 @@ export function MockExam({ prefs, usage, onChanged, onReward, dev }: Props) {
             ))}
           </ol>
         </section>
+        )}
         <p className="detail-hint">{result.disclaimer}</p>
         <div className="row-actions">
           <Link to="/study" className="btn btn-primary">오늘의 학습으로</Link>

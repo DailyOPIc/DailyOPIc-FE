@@ -139,13 +139,22 @@ async function request<T>(
   path: string,
   init: { method?: string; json?: unknown; form?: FormData; idempotencyKey?: string } = {},
 ): Promise<T> {
-  const h = await headers(init.idempotencyKey);
-  if (init.json !== undefined) h["Content-Type"] = "application/json";
-  const response = await fetch(BASE_URL + path, {
-    method: init.method ?? "GET",
-    headers: h,
-    body: init.form ?? (init.json !== undefined ? JSON.stringify(init.json) : undefined),
-  });
+  let response: Response;
+  // 같은 작업이 서버에서 아직 처리 중이면(409 request_processing: 새로고침 · 두 기기 · 중복 요청)
+  // 오류로 끝내지 않고 Retry-After만큼 기다렸다가 다시 묻는다(최대 약 1분).
+  for (let attempt = 0; ; attempt++) {
+    const h = await headers(init.idempotencyKey);
+    if (init.json !== undefined) h["Content-Type"] = "application/json";
+    response = await fetch(BASE_URL + path, {
+      method: init.method ?? "GET",
+      headers: h,
+      body: init.form ?? (init.json !== undefined ? JSON.stringify(init.json) : undefined),
+    });
+    if (response.status !== 409 || attempt >= 30) break;
+    const peek = await response.clone().json().catch(() => ({}));
+    if (peek?.detail?.code !== "request_processing") break;
+    await new Promise((r) => setTimeout(r, (Number(response.headers.get("Retry-After")) || 2) * 1000));
+  }
   if (!response.ok) {
     const body = await response.json().catch(() => ({}));
     const detail = typeof body.detail === "object" && body.detail ? body.detail : {};
