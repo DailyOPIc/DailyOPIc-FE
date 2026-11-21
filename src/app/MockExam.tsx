@@ -295,7 +295,7 @@ export function MockExam({ prefs, usage, onChanged, onReward, dev }: Props) {
             Q{question.number} <em>/ 15</em>
           </span>
           <div className="mock-progress" aria-hidden>
-            <span style={{ width: `${(Object.keys(answers).length / 15) * 100}%` }} />
+            <span style={{ transform: `scaleX(${Object.keys(answers).length / 15})` }} />
           </div>
           <button className="btn btn-ghost btn-sm" onClick={() => void abandon()}>
             그만두기

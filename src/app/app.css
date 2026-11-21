@@ -3610,7 +3610,8 @@
   height: 100%;
   background: var(--primary);
   border-radius: inherit;
-  transition: width 0.4s var(--ease-out);
+  transform-origin: left;
+  transition: transform 0.4s var(--ease-out);
 }
 .btn.btn-sm {
   padding: 8px 12px;
