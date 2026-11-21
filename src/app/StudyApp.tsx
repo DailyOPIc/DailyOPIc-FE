@@ -4,11 +4,15 @@ import { Mascot } from "../assets/Mascot";
 import { api, type ApiError, type Evaluation, type QuestionSet, type Usage } from "../lib/api";
 import { useAuth } from "../lib/auth";
 import { loadGame, recordActivity, XP, type GameState, type Recorded } from "../lib/game";
+import { REFRESH_EVENT } from "../lib/native";
+import { canWatchAd, claimActivityToken, watchAdForToken } from "../lib/tokens";
 import { loadPrefs, savePrefs, type StudyPrefs } from "../lib/prefs";
 import type { QuickCheck } from "../lib/quickcheck";
 import { play, warmUp } from "../lib/sfx";
 import { AppShell } from "./AppShell";
+import { Activity } from "./Activity";
 import { Lesson } from "./Lesson";
+import { MockExam } from "./MockExam";
 import { Onboarding } from "./Onboarding";
 import { PathHome } from "./PathHome";
 import { RandomSpeak } from "./RandomSpeak";
@@ -47,7 +51,7 @@ export function StudyApp() {
 
 function Study({ uid }: { uid: string }) {
   const { pathname } = useLocation();
-  const view = pathname.startsWith("/study/speak") ? "speak" : pathname.startsWith("/study/words") ? "words" : "path";
+  const view = (["speak", "words", "mock", "activity"] as const).find((v) => pathname.startsWith(`/study/${v}`)) ?? "path";
   const [prefs, setPrefs] = useState<StudyPrefs | null>(() => loadPrefs(uid));
   const [editing, setEditing] = useState(false);
   const [set, setSet] = useState<QuestionSet | null>(null);
@@ -69,15 +73,22 @@ function Study({ uid }: { uid: string }) {
     (xp: number): Recorded => {
       const r = recordActivity(uid, xp);
       setGame(r.state);
+      if (r.goalJustReached) void claimActivityToken("goal", "오늘의 목표 달성");
       return r;
     },
     [uid],
   );
 
-  // 플랜은 단계 · 설문과 상관없이 늘 필요하다(무료 한도 판단)
+  // 플랜은 단계 · 설문과 상관없이 늘 필요하다(무료 한도 판단). 앱에서 결제 화면을 닫으면 다시 읽는다.
   useEffect(() => {
-    api.capabilities().then((c) => setPlan(c.plan)).catch(() => {});
-  }, []);
+    const load = () => {
+      api.capabilities().then((c) => setPlan(c.plan)).catch(() => {});
+      void refreshUsage();
+    };
+    load();
+    window.addEventListener(REFRESH_EVENT, load);
+    return () => window.removeEventListener(REFRESH_EVENT, load);
+  }, [refreshUsage]);
 
   useEffect(() => {
     // 첫 입력 때 효과음을 미리 풀어 둔다(브라우저 자동 재생 정책)
@@ -118,7 +129,8 @@ function Study({ uid }: { uid: string }) {
   }, [prefs]);
 
   // 단어 게임은 단계 · 설문이 필요 없다(도전장으로 처음 온 사람도 바로 대결)
-  if ((!prefs && view !== "words") || editing)
+  // 오픽게임 · 활동은 설문 없이도 열린다
+  if ((!prefs && view !== "words" && view !== "activity") || editing)
     return (
       <Onboarding
         initial={prefs}
@@ -177,7 +189,9 @@ function Study({ uid }: { uid: string }) {
     } catch (e) {
       const err = e as ApiError;
       play("wrong", { volume: 0.5 });
-      window.alert(err.isQuotaExhausted ? "오늘의 데일리 토큰을 모두 썼어요. 자정에 다시 채워져요." : err.message);
+      if (err.isQuotaExhausted && canWatchAd(plan)) {
+        if (window.confirm("오늘의 토큰을 모두 썼어요. 광고를 보고 토큰 1개를 받을까요?")) void watchAdForToken();
+      } else window.alert(err.isQuotaExhausted ? "오늘의 데일리 토큰을 모두 썼어요. 자정에 다시 채워져요." : err.message);
     } finally {
       setBusy(false);
       void refreshUsage();
@@ -186,6 +200,8 @@ function Study({ uid }: { uid: string }) {
 
   let content: ReactNode;
   if (view === "speak" && prefs) content = <RandomSpeak uid={uid} plan={plan} prefs={prefs} onReward={reward} onLimitUse={onLimitUse} />;
+  else if (view === "mock" && prefs) content = <MockExam prefs={prefs} usage={usage} onChanged={() => void refreshUsage()} onReward={reward} />;
+  else if (view === "activity") content = <Activity uid={uid} game={game} />;
   else if (view === "words") content = <WordGames uid={uid} plan={plan} onReward={reward} onLimitUse={onLimitUse} />;
   else if (set)
     content = (
@@ -203,6 +219,7 @@ function Study({ uid }: { uid: string }) {
           saveJSON(K.chests(set.setId), next);
           reward(15);
           play("fanfare");
+          void claimActivityToken("chest", "보물상자");
         }}
       />
     );

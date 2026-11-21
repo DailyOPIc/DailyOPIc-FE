@@ -2,7 +2,11 @@ import { useState, type ReactNode } from "react";
 import { Link, NavLink } from "react-router-dom";
 import { Icon, type IconName } from "../assets/Icon";
 import { Mascot } from "../assets/Mascot";
+import { CoachMarks } from "./CoachMarks";
+import { DeleteAccountDialog } from "./DeleteAccount";
 import { signOut } from "../lib/auth";
+import { callNative, inApp } from "../lib/native";
+import { canWatchAd, watchAdForToken } from "../lib/tokens";
 import { DAILY_GOAL, type GameState } from "../lib/game";
 import { FREE_DAILY, LIMIT_LABEL, used, type LimitKind } from "../lib/limits";
 import { isMuted, play, setMuted } from "../lib/sfx";
@@ -16,16 +20,20 @@ type Props = {
   children: ReactNode;
 };
 
-const NAV: { to: string; label: string; icon: IconName; end?: boolean }[] = [
-  { to: "/study", label: "오늘의 학습", icon: "mic", end: true },
+// tab: 모바일 하단 탭 이름(5개까지). 없으면 ☰ 메뉴에서만 보인다.
+const NAV: { to: string; label: string; tab?: string; icon: IconName; end?: boolean }[] = [
+  { to: "/study", label: "오늘의 학습", tab: "학습", icon: "mic", end: true },
+  { to: "/study/mock", label: "모의고사", tab: "모의고사", icon: "clipboard" },
+  { to: "/study/words", label: "오픽게임", tab: "오픽게임", icon: "keyboard" },
+  { to: "/study/activity", label: "활동", tab: "활동", icon: "flame" },
   { to: "/study/speak", label: "랜덤 스피킹", icon: "dice" },
-  { to: "/study/words", label: "단어 게임", icon: "keyboard" },
 ];
 
 /** 서비스 화면 틀: 사이트 헤더 · 푸터 없이 왼쪽 레일 + 가운데 학습 + 오른쪽 현황 */
 export function AppShell({ uid, game, tokens, plan, onEditPrefs, children }: Props) {
   const [menu, setMenu] = useState(false);
   const [muted, setMute] = useState(isMuted);
+  const [deleting, setDeleting] = useState(false);
 
   const toggleMute = () => {
     setMuted(!muted);
@@ -41,10 +49,6 @@ export function AppShell({ uid, game, tokens, plan, onEditPrefs, children }: Pro
           {n.label}
         </NavLink>
       ))}
-      <span className="rail-item soon" title="곧 열려요">
-        <Icon name="clipboard" size={30} />
-        모의고사<em>곧</em>
-      </span>
       <Link className="rail-item" to="/membership">
         <Icon name="gem" size={30} />
         요금제
@@ -58,10 +62,24 @@ export function AppShell({ uid, game, tokens, plan, onEditPrefs, children }: Pro
         <Icon name={muted ? "soundOff" : "soundOn"} size={26} />
         효과음 {muted ? "끔" : "켬"}
       </button>
-      <button className="rail-item small" onClick={() => void signOut()}>
-        <Icon name="door" size={26} />
-        로그아웃
-      </button>
+      {inApp ? (
+        // 앱 안: 로그인 연결 · 계정 삭제(Apple 토큰 폐기 포함)는 앱의 계정 화면이 맡는다
+        <button className="rail-item small" onClick={() => void callNative("openAccount")}>
+          <Icon name="door" size={26} />
+          계정 · 로그인
+        </button>
+      ) : (
+        <>
+          <button className="rail-item small" onClick={() => void signOut()}>
+            <Icon name="door" size={26} />
+            로그아웃
+          </button>
+          <button className="rail-item small danger" onClick={() => setDeleting(true)}>
+            <Icon name="close" size={26} />
+            계정 삭제
+          </button>
+        </>
+      )}
     </>
   );
 
@@ -79,7 +97,16 @@ export function AppShell({ uid, game, tokens, plan, onEditPrefs, children }: Pro
         <Link to="/" className="topbar-logo" aria-label="데일리오픽 홈">
           <img src="/images/logo-mark.png" alt="" width={30} height={30} />
         </Link>
-        <Stats game={game} tokens={tokens} compact />
+        <Stats
+          game={game}
+          tokens={tokens}
+          compact
+          onToken={
+            canWatchAd(plan)
+              ? () => window.confirm("광고를 보고 오늘 쓸 토큰 1개를 받을까요?") && void watchAdForToken()
+              : undefined
+          }
+        />
         <button className="icon-btn" aria-expanded={menu} aria-label="메뉴" onClick={() => setMenu((v) => !v)}>
           <Icon name={menu ? "close" : "menu"} size={24} />
         </button>
@@ -91,12 +118,14 @@ export function AppShell({ uid, game, tokens, plan, onEditPrefs, children }: Pro
       </header>
 
       <main className="app-main">{children}</main>
+      {deleting && <DeleteAccountDialog onClose={() => setDeleting(false)} />}
+      <CoachMarks uid={uid} />
 
       <nav className="tabbar" aria-label="학습 메뉴">
-        {NAV.map((n) => (
+        {NAV.filter((n) => n.tab).map((n) => (
           <NavLink key={n.to} to={n.to} end={n.end} className="tab" onClick={() => play("tap", { volume: 0.4 })}>
-            <Icon name={n.icon} size={28} />
-            <span>{n.label}</span>
+            <Icon name={n.icon} size={26} />
+            <span>{n.tab}</span>
           </NavLink>
         ))}
       </nav>
@@ -129,18 +158,26 @@ export function AppShell({ uid, game, tokens, plan, onEditPrefs, children }: Pro
   );
 }
 
-function Stats({ game, tokens, compact }: { game: GameState; tokens: number | null; compact?: boolean }) {
+function Stats({ game, tokens, compact, onToken }: { game: GameState; tokens: number | null; compact?: boolean; onToken?: () => void }) {
   return (
     <div className={compact ? "stats-row compact" : "stats-row"}>
-      <span className={`stat-chip streak${game.streak > 0 ? " lit" : ""}`} title="연속 학습일">
+      <span className={`stat-chip streak${game.streak > 0 ? " lit" : ""}`} title="연속 학습일" data-coach="streak">
         <Icon name="flame" size={compact ? 22 : 26} /> <b>{game.streak}</b>
       </span>
-      <span className="stat-chip xp" title="경험치">
+      <span className="stat-chip xp" title="경험치" data-coach="xp">
         <Icon name="bolt" size={compact ? 22 : 26} /> <b>{game.xp}</b>
       </span>
-      <span className="stat-chip token" title="오늘 남은 AI 분석 토큰">
-        <Icon name="coin" size={compact ? 22 : 26} /> <b>{tokens ?? "–"}</b>
-      </span>
+      {onToken ? (
+        // 앱(무료): 토큰을 누르면 광고 보고 1개 더 받기
+        <button className="stat-chip token" title="광고 보고 토큰 받기" data-coach="token" onClick={onToken}>
+          <Icon name="coin" size={compact ? 22 : 26} /> <b>{tokens ?? "–"}</b>
+          <span className="chip-plus" aria-hidden="true">+</span>
+        </button>
+      ) : (
+        <span className="stat-chip token" title="오늘 남은 토큰" data-coach="token">
+          <Icon name="coin" size={compact ? 22 : 26} /> <b>{tokens ?? "–"}</b>
+        </span>
+      )}
     </div>
   );
 }

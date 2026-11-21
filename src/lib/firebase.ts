@@ -30,7 +30,9 @@ if (import.meta.env.DEV) {
 }
 
 // 디버그 모드에선 공급자 키를 쓰지 않으므로 사이트 키가 없어도 초기화한다.
-const providerKey = siteKey ?? (import.meta.env.DEV ? "debug-only" : undefined);
+// iOS 앱 안에서는 앱의 App Check 토큰을 쓰므로 웹 App Check를 켜지 않는다
+const inIOSApp = Boolean((window as unknown as { DailyOPIcNative?: unknown }).DailyOPIcNative);
+const providerKey = inIOSApp ? undefined : siteKey ?? (import.meta.env.DEV ? "debug-only" : undefined);
 const appCheck: AppCheck | null = providerKey
   ? initializeAppCheck(app, { provider: new ReCaptchaEnterpriseProvider(providerKey), isTokenAutoRefreshEnabled: true })
   : null;

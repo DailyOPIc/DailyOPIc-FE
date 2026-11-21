@@ -1,6 +1,6 @@
 import { StrictMode, useEffect, type ReactNode } from "react";
 import { createRoot } from "react-dom/client";
-import { BrowserRouter, Route, Routes, useLocation } from "react-router-dom";
+import { BrowserRouter, Navigate, Route, Routes, useLocation } from "react-router-dom";
 import { Header } from "./components/Header";
 import { Footer } from "./components/Footer";
 import { Home } from "./pages/Home";
@@ -16,6 +16,10 @@ import { StudyApp } from "./app/StudyApp";
 import { DevPreview } from "./app/DevPreview";
 import { DevAssets } from "./app/DevAssets";
 import { AuthProvider } from "./lib/auth";
+import { inApp } from "./lib/native";
+import { AppPaywall } from "./app/AppPaywall";
+import { AppSplash } from "./app/AppSplash";
+import { TokenToast } from "./app/TokenToast";
 import "./styles.css";
 
 function ScrollToTop() {
@@ -134,15 +138,18 @@ createRoot(document.getElementById("root")!).render(
       <ScrollToTop />
       <RevealOnScroll />
       <SeoTags />
+      {inApp && <AppSplash />}
+      <TokenToast />
       <SiteChrome>
         <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/membership" element={<Membership />} />
+          {/* iOS 앱 안: 랜딩 · 로그인은 건너뛰고, 요금제는 앱의 인앱결제 화면을 띄운다(토스 결제는 앱에서 숨김) */}
+          <Route path="/" element={inApp ? <Navigate to="/study" replace /> : <Home />} />
+          <Route path="/membership" element={inApp ? <AppPaywall /> : <Membership />} />
           <Route path="/help" element={<Help />} />
           <Route path="/privacy" element={<Privacy />} />
           <Route path="/refund" element={<Refund />} />
           <Route path="/terms" element={<Terms />} />
-          <Route path="/login" element={<Login />} />
+          <Route path="/login" element={inApp ? <Navigate to="/study" replace /> : <Login />} />
           <Route path="/study/*" element={<StudyApp />} />
           <Route path="/payments/success" element={<PaymentResult ok />} />
           <Route path="/payments/fail" element={<PaymentResult ok={false} />} />

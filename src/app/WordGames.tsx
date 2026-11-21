@@ -1,10 +1,12 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { Icon } from "../assets/Icon";
 import { Mascot } from "../assets/Mascot";
 import { EXPRESSIONS, GROUP_LABEL } from "../data/expressions";
 import { decodeChallenge, newSeed, rng, seededShuffle, todaySeed, type Challenge, type GameMode } from "../lib/challenge";
 import { XP, type Recorded } from "../lib/game";
+import { loadGameSets, nextGameSet, setActiveGameSet, type GameSet } from "../lib/gamePool";
+import { claimActivityToken } from "../lib/tokens";
 import { consume, FREE_DAILY, remaining } from "../lib/limits";
 import { speak } from "../lib/recorder";
 import { play } from "../lib/sfx";
@@ -28,6 +30,11 @@ export function WordGames({ uid, plan, onReward, onLimitUse }: Props) {
   const [blocked, setBlocked] = useState(false);
   const left = remaining(uid, plan, "games");
   const preview = useMemo(() => seededShuffle(EXPRESSIONS, rng(daily)).slice(0, 3), [daily]);
+  // 오늘의 AI 세트(하루 5개). 받기 전 · 실패 시엔 기본 문제로 논다.
+  const [sets, setSets] = useState<GameSet[] | null>(null);
+  useEffect(() => {
+    void loadGameSets().then(setSets);
+  }, []);
 
   const start = (mode: GameMode, seed: number, vs: Challenge | null = null) => {
     // 받은 도전장은 한도와 상관없이(친구를 데려오는 길은 막지 않는다)
@@ -41,6 +48,8 @@ export function WordGames({ uid, plan, onReward, onLimitUse }: Props) {
       }
       onLimitUse();
     }
+    // 판마다 다음 세트. 도전장 · 오늘의 챌린지는 모두 같은 문제여야 해서 기본 문제로.
+    setActiveGameSet(!vs && seed !== daily && sets ? nextGameSet(sets) : null);
     play("start");
     setSummary(null);
     setReward(null);
@@ -50,6 +59,7 @@ export function WordGames({ uid, plan, onReward, onLimitUse }: Props) {
     saveBest(s.mode, s.score);
     setReward(onReward(XP.practice + s.correct * XP.wordCorrect));
     setSummary(s);
+    void claimActivityToken("game", "오픽게임 한 판");
   };
   const exit = () => {
     setRun(null);
@@ -95,9 +105,9 @@ export function WordGames({ uid, plan, onReward, onLimitUse }: Props) {
         <div className="mode-hero">
           <Mascot mood="happy" size={96} />
           <div>
-            <p className="eyebrow">무료 · 무제한</p>
-            <h1>단어 게임</h1>
-            <p className="lead">OPIc 답변에 바로 쓰는 표현 {EXPRESSIONS.length}개를 게임으로 익히고, 친구와 기록 대결도 해요.</p>
+            <p className="eyebrow">매일 새 문제</p>
+            <h1>오픽게임</h1>
+            <p className="lead">OPIc 답변에 바로 쓰는 표현을 매일 새로 나오는 문제로 익히고, 친구와 기록 대결도 해요.</p>
           </div>
         </div>
       )}

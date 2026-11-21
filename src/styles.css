@@ -188,9 +188,13 @@ h3 {
   color: var(--ink-2);
 }
 
-.nav a.active,
-.nav a:hover {
+.nav a.active {
   color: var(--ink);
+}
+@media (hover: hover) {
+  .nav a:hover {
+  color: var(--ink);
+}
 }
 
 .nav-login {
@@ -799,17 +803,22 @@ h3 {
 .review {
   transition: transform 0.35s var(--ease-out), box-shadow 0.35s var(--ease-out);
 }
-.plan:hover,
-.review:hover {
+@media (hover: hover) {
+  .plan:hover, .review:hover {
   transform: translateY(-6px);
   box-shadow: var(--shadow);
 }
+}
 
-.button-primary:hover {
+@media (hover: hover) {
+  .button-primary:hover {
   background: color-mix(in srgb, var(--primary) 88%, #000);
 }
-.button-ghost:hover {
+}
+@media (hover: hover) {
+  .button-ghost:hover {
   box-shadow: inset 0 0 0 1.5px var(--primary);
+}
 }
 
 /* 가로 무한 스크롤 */
@@ -1623,8 +1632,10 @@ h3 {
   padding: 0 32px;
   font-size: 18px;
 }
-.finale .button-primary:hover {
+@media (hover: hover) {
+  .finale .button-primary:hover {
   background: var(--primary-soft);
+}
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -1647,8 +1658,10 @@ h3 {
   color: #fff;
   box-shadow: inset 0 0 0 1.5px rgba(255, 255, 255, 0.6);
 }
-.finale .store:hover {
+@media (hover: hover) {
+  .finale .store:hover {
   background: rgba(255, 255, 255, 0.12);
+}
 }
 
 /* ───────── 로그인 ───────── */
@@ -1790,8 +1803,15 @@ h3 {
   box-shadow: 0 18px 40px -16px rgba(0, 0, 0, 0.45);
   transition: transform 0.2s var(--ease-out);
 }
-.login-primary:hover:not(:disabled) {
+.login-primary.apple {
+  margin-top: 12px;
+  background: #000;
+  color: #fff;
+}
+@media (hover: hover) {
+  .login-primary:hover:not(:disabled) {
   transform: translateY(-2px);
+}
 }
 .login-primary:disabled,
 .login-icon:disabled {
@@ -1828,8 +1848,10 @@ h3 {
   cursor: pointer;
   transition: transform 0.2s var(--ease-out);
 }
-.login-icon:hover:not(:disabled) {
+@media (hover: hover) {
+  .login-icon:hover:not(:disabled) {
   transform: translateY(-2px);
+}
 }
 .login-icon.apple {
   background: #000;
@@ -1903,8 +1925,10 @@ h3 {
   color: #fff;
   box-shadow: 0 5px 0 #3417c7;
 }
-.chunky-primary:hover {
+@media (hover: hover) {
+  .chunky-primary:hover {
   filter: brightness(1.08);
+}
 }
 .chunky-ghost {
   background: #fff;
@@ -2253,8 +2277,10 @@ h3 {
   box-shadow: inset 0 0 0 2px var(--line), 0 6px 0 var(--line);
   transition: transform 0.2s var(--ease-out);
 }
-.free-card:hover {
+@media (hover: hover) {
+  .free-card:hover {
   transform: translateY(-4px);
+}
 }
 .free-card strong {
   font-size: 22px;
@@ -2419,3 +2445,40 @@ h3 {
   gap: 12px;
   margin-top: 8px;
 }
+
+/* iOS 앱 전용 스플래시(src/app/AppSplash.tsx). 흰 바탕: 시스템 실행 화면 · 상태바와 같은 색이라 튀지 않는다. */
+.app-splash {
+  position: fixed;
+  inset: 0;
+  z-index: 2000;
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  gap: 18px;
+  background: #fff;
+  transition: opacity 0.4s var(--ease-out);
+}
+.app-splash.out {
+  opacity: 0;
+  pointer-events: none;
+}
+.app-splash-logo {
+  width: 120px;
+  height: 120px;
+}
+.app-splash-name {
+  margin: 0;
+  color: var(--primary);
+  font-size: 26px;
+  font-weight: 900;
+  letter-spacing: -0.02em;
+  animation: rise 0.6s var(--ease-out) 0.5s both;
+}
+/* 스플래시에서는 로고를 절반 속도로 그려 1.3초 안에 끝낸다 */
+.app-splash-logo .stroke { animation-duration: 0.3s; }
+.app-splash-logo .s1 { animation-delay: 0.05s; }
+.app-splash-logo .s2 { animation-delay: 0.3s; }
+.app-splash-logo .s3 { animation-delay: 0.5s; animation-duration: 0.15s; }
+.app-splash-logo .s4 { animation-delay: 0.62s; animation-duration: 0.2s; }
+.app-splash-logo .s5 { animation-delay: 0.78s; animation-duration: 0.45s; }
+.app-splash-name { animation-delay: 0.3s; }

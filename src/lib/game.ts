@@ -57,6 +57,9 @@ export function recordActivity(uid: string, xp: number): Recorded {
   };
   try {
     localStorage.setItem(key(uid), JSON.stringify(state));
+    const log = loadActivity(uid);
+    log[today] = (log[today] ?? 0) + 1;
+    localStorage.setItem(activityKey(uid), JSON.stringify(log));
   } catch {
     /* noop */
   }
@@ -68,8 +71,32 @@ export function recordActivity(uid: string, xp: number): Recorded {
   };
 }
 
+const activityKey = (uid: string) => `dailyopic:activity:${uid}`;
+
+/** 날짜(KST)별 학습 활동 횟수. 활동 잔디(GitHub 스트릭 같은 달력)가 읽는다. */
+export function loadActivity(uid: string): Record<string, number> {
+  try {
+    return (JSON.parse(localStorage.getItem(activityKey(uid)) ?? "{}") as Record<string, number>) ?? {};
+  } catch {
+    return {};
+  }
+}
+
+/** 오늘(KST)까지 weeks주를 월요일 시작 열로 채운 날짜 목록(앞쪽은 null로 맞춤) */
+export function heatmapDays(today: string, weeks: number): (string | null)[] {
+  const t = Date.parse(`${today}T00:00:00Z`);
+  const dow = (new Date(t).getUTCDay() + 6) % 7; // 월=0
+  const start = t - (dow + (weeks - 1) * 7) * 86_400_000;
+  return Array.from({ length: weeks * 7 }, (_, i) => {
+    const d = start + i * 86_400_000;
+    return d > t ? null : new Date(d).toISOString().slice(0, 10);
+  });
+}
+
 // 자체 점검: node -e 로 돌릴 수 있도록 순수 함수만 썼다.
 export function _selfCheck() {
   console.assert(prevDay("2026-03-01") === "2026-02-28", "prevDay month boundary");
   console.assert(kstDay(new Date("2026-11-14T15:30:00Z")) === "2026-11-15", "KST rolls over at 15:00 UTC");
+  const days = heatmapDays("2026-11-21", 2); // 토요일
+  console.assert(days.length === 14 && days[0] === "2026-11-09" && days[12] === "2026-11-21" && days[13] === null, "heatmap grid");
 }

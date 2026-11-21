@@ -86,7 +86,8 @@ export function useAnswerRecorder() {
       setError("마이크 권한이 필요해요. 브라우저 주소창의 권한 설정에서 마이크를 허용해 주세요.");
       return;
     }
-    const rec = new MediaRecorder(stream);
+    // 32kbps: 15문항(최대 180초씩)을 모의고사 업로드 한도(30MB) 안에 담는다
+    const rec = new MediaRecorder(stream, { audioBitsPerSecond: 32_000 });
     rec.ondataavailable = (e) => e.data.size && chunks.current.push(e.data);
     rec.onstop = () => {
       const audio = chunks.current.length ? new Blob(chunks.current, { type: rec.mimeType }) : null;

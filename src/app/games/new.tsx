@@ -1,9 +1,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Icon } from "../../assets/Icon";
 import { Mascot } from "../../assets/Mascot";
-import { EXPRESSIONS } from "../../data/expressions";
-import { SENTENCES } from "../../data/sentences";
 import { rng, seededShuffle } from "../../lib/challenge";
+import { freshFirst, gameExpressions, gameSentences } from "../../lib/gamePool";
 import { speak } from "../../lib/recorder";
 import { play } from "../../lib/sfx";
 import { GameTop, type GameProps } from "./common";
@@ -14,7 +13,8 @@ const SPEED_SECONDS = 60;
 
 export function Speed({ seed, onExit, onDone }: GameProps) {
   // 시드로 섞은 순서를 계속 돌린다(60초 안에 다 풀면 처음부터 다시)
-  const order = useMemo(() => seededShuffle(EXPRESSIONS, rng(seed)), [seed]);
+  const pool = useMemo(gameExpressions, []);
+  const order = useMemo(() => freshFirst(pool, seed), [pool, seed]);
   const [i, setI] = useState(0);
   const [left, setLeft] = useState(SPEED_SECONDS);
   const [correct, setCorrect] = useState(0);
@@ -29,7 +29,7 @@ export function Speed({ seed, onExit, onDone }: GameProps) {
 
   const options = useMemo(() => {
     const r = rng(seed + i * 104729);
-    return seededShuffle([item, ...seededShuffle(EXPRESSIONS.filter((e) => e !== item), r).slice(0, 3)], r);
+    return seededShuffle([item, ...seededShuffle(pool.filter((e) => e !== item), r).slice(0, 3)], r);
   }, [item, seed, i]);
 
   useEffect(() => {
@@ -129,7 +129,7 @@ export function Speed({ seed, onExit, onDone }: GameProps) {
 type Tile = { id: number; w: string };
 
 export function Build({ seed, onExit, onDone }: GameProps) {
-  const items = useMemo(() => seededShuffle(SENTENCES, rng(seed)).slice(0, 6), [seed]);
+  const items = useMemo(() => freshFirst(gameSentences(), seed).slice(0, 6), [seed]);
   const [i, setI] = useState(0);
   const [placed, setPlaced] = useState<Tile[]>([]);
   const [checked, setChecked] = useState<null | boolean>(null);
@@ -229,7 +229,7 @@ export function Build({ seed, onExit, onDone }: GameProps) {
 /* ───────── 빈칸 채우기: 문장에 맞는 연결어 고르기 ───────── */
 
 export function Fill({ seed, onExit, onDone }: GameProps) {
-  const items = useMemo(() => seededShuffle(SENTENCES, rng(seed)).slice(0, 10), [seed]);
+  const items = useMemo(() => freshFirst(gameSentences(), seed).slice(0, 10), [seed]);
   const [i, setI] = useState(0);
   const [hearts, setHearts] = useState(3);
   const [picked, setPicked] = useState<string | null>(null);

@@ -48,6 +48,29 @@ function useColumns() {
   return { ref, cols };
 }
 
+/** 판 안 각 칸의 동그라미 중심(px)과 판 크기. 판 크기가 바뀌면 다시 잰다. */
+function useTrail(ref: React.RefObject<HTMLDivElement | null>, layoutKey: string) {
+  const [trail, setTrail] = useState<{ w: number; h: number; points: [number, number][] }>({ w: 100, h: 100, points: [] });
+  useLayoutEffect(() => {
+    const board = ref.current;
+    if (!board) return;
+    const measure = () => {
+      const points = [...board.querySelectorAll<HTMLElement>(":scope > .cell")].map((cell) => {
+        const a = cell.firstElementChild as HTMLElement | null;
+        const x = cell.offsetLeft + (a ? a.offsetLeft + a.offsetWidth / 2 : cell.offsetWidth / 2);
+        const y = cell.offsetTop + (a ? a.offsetTop + a.offsetHeight / 2 : cell.offsetHeight / 2);
+        return [Math.round(x), Math.round(y)] as [number, number];
+      });
+      setTrail({ w: board.clientWidth || 100, h: board.clientHeight || 100, points });
+    };
+    measure();
+    const ro = new ResizeObserver(measure);
+    ro.observe(board);
+    return () => ro.disconnect();
+  }, [ref, layoutKey]);
+  return trail;
+}
+
 /** 오늘의 세트 학습 판: 보드게임처럼 줄마다 방향을 바꿔 한 화면에 들어간다. */
 export function PathHome({ set, results, practiced, openedChests, busy, onOpen, onChest, onNewSet }: Props) {
   const { ref, cols } = useColumns();
@@ -70,16 +93,17 @@ export function PathHome({ set, results, practiced, openedChests, busy, onOpen, 
     const c = k % cols;
     return { row, col: row % 2 === 0 ? c : cols - 1 - c };
   };
-  const center = (k: number) => {
-    const { row, col } = place(k);
-    return [((col + 0.5) / cols) * 100, ((row + 0.5) / rows) * 100];
-  };
+  // 길은 칸 중심이 아니라 실제 동그라미(칸의 첫 요소) 중심을 잇는다.
+  // 칸 안에서 동그라미는 이름표 때문에 위로 올라가 있고, 판에는 위쪽 여백도 있어서
+  // 칸 비율로 계산하면 점선이 동그라미 위로 어긋난다. 등장 애니메이션(transform)에
+  // 흔들리지 않게 offset(레이아웃 위치)으로 잰다.
+  const trail = useTrail(ref, `${cols}:${cells.length}`);
   // 지나온 길: 마지막으로 끝낸 칸까지 보라색
   const lastDoneCell = cells.reduce((acc, c, k) => (c.kind === "q" && isDone(c.index) ? k : acc), -1);
   const points = (upTo: number) =>
-    cells
+    trail.points
       .slice(0, upTo + 1)
-      .map((_, k) => center(k).join(","))
+      .map((p) => p.join(","))
       .join(" ");
 
   return (
@@ -112,7 +136,7 @@ export function PathHome({ set, results, practiced, openedChests, busy, onOpen, 
       </section>
 
       <div className="board" ref={ref} style={{ gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))`, gridTemplateRows: `repeat(${rows}, minmax(0, 1fr))`, "--rows": rows, "--cols": cols } as CSSProperties}>
-        <svg className="board-trail" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+        <svg className="board-trail" viewBox={`0 0 ${trail.w} ${trail.h}`} aria-hidden="true">
           <polyline points={points(cells.length - 1)} className="trail-todo" />
           {lastDoneCell > 0 && <polyline points={points(lastDoneCell)} className="trail-done" />}
         </svg>

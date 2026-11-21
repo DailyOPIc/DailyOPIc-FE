@@ -7,6 +7,7 @@ import type { Recorded } from "../lib/game";
 import { quickCheck, type QuickCheck } from "../lib/quickcheck";
 import { speak, speechSupported, useAnswerRecorder, type Recording } from "../lib/recorder";
 import { play } from "../lib/sfx";
+import { canWatchAd, watchAdForToken } from "../lib/tokens";
 import { SECTION } from "./PathHome";
 import { Confetti, QuickCheckCard, RewardChips } from "./Reward";
 import { ResultDetail } from "./ResultDetail";
@@ -285,9 +286,18 @@ export function Lesson(props: Props) {
             </div>
           </div>
           <div className="bar-actions">
-            <Link to="/membership#tokens" className="btn btn-secondary">
-              토큰 · 이용권
-            </Link>
+            {canWatchAd(props.plan) ? (
+              <button
+                className="btn btn-secondary"
+                onClick={() => void watchAdForToken().then((ok) => ok && setPhase(pending ? "checked" : "ready"))}
+              >
+                광고 보고 토큰 받기
+              </button>
+            ) : (
+              <Link to="/membership#tokens" className="btn btn-secondary">
+                토큰 · 이용권
+              </Link>
+            )}
             <button className="btn btn-primary" onClick={next}>
               계속 연습
             </button>
