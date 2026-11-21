@@ -63,7 +63,7 @@ function Study({ uid }: { uid: string }) {
   const onLimitUse = useCallback(() => setLimitTick((t) => t + 1), []);
   const [error, setError] = useState<string | null>(null);
 
-  const tokens = usage ? usage.freeRemaining + usage.bonusRemaining : null;
+  const tokens = usage ? usage.freeRemaining + usage.bonusRemaining + (usage.purchasedTokens ?? 0) : null;
   const refreshUsage = useCallback(() => api.usage().then(setUsage).catch(() => {}), []);
   const reward = useCallback(
     (xp: number): Recorded => {

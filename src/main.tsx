@@ -5,6 +5,7 @@ import { Header } from "./components/Header";
 import { Footer } from "./components/Footer";
 import { Home } from "./pages/Home";
 import { Membership } from "./pages/Membership";
+import { PaymentResult } from "./pages/PaymentResult";
 import { Help } from "./pages/Help";
 import { Privacy } from "./pages/Privacy";
 import { NotFound } from "./pages/NotFound";
@@ -44,6 +45,8 @@ const PAGES: Record<string, { title: string; description?: string }> = {
   "/study": { title: `오늘의 학습 · ${BRAND}` },
   "/study/speak": { title: `랜덤 스피킹 · ${BRAND}` },
   "/study/words": { title: `단어 게임 · ${BRAND}` },
+  "/payments/success": { title: `결제 확인 · ${BRAND}` },
+  "/payments/fail": { title: `결제 실패 · ${BRAND}` },
 };
 
 function setHead(selector: string, create: () => HTMLElement, attr: string, value: string | null) {
@@ -109,7 +112,7 @@ function RevealOnScroll() {
 /** 서비스 화면(/login, /study)은 사이트 헤더 · 푸터 없이 꽉 채운다. */
 function SiteChrome({ children }: { children: ReactNode }) {
   const { pathname } = useLocation();
-  const app = /^\/(study|login|dev)/.test(pathname);
+  const app = /^\/(study|login|dev|payments)/.test(pathname);
   if (app) return <>{children}</>;
   return (
     <>
@@ -135,6 +138,8 @@ createRoot(document.getElementById("root")!).render(
           <Route path="/privacy" element={<Privacy />} />
           <Route path="/login" element={<Login />} />
           <Route path="/study/*" element={<StudyApp />} />
+          <Route path="/payments/success" element={<PaymentResult ok />} />
+          <Route path="/payments/fail" element={<PaymentResult ok={false} />} />
           {import.meta.env.DEV && <Route path="/dev/study" element={<DevPreview />} />}
           {import.meta.env.DEV && <Route path="/dev/assets" element={<DevAssets />} />}
           <Route path="*" element={<NotFound />} />

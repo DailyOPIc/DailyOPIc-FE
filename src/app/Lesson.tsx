@@ -281,12 +281,12 @@ export function Lesson(props: Props) {
             <Icon name="coin" size={48} />
             <div>
               <strong>오늘의 AI 분석 토큰을 다 썼어요</strong>
-              <p>말하기 연습 · 간단 체크 · 단어 게임은 계속 무료예요. 토큰은 자정에 다시 채워져요.</p>
+              <p>말하기 연습 · 간단 체크 · 단어 게임은 계속 무료예요. 토큰은 자정에 다시 채워지고, 바로 더 쓰려면 토큰을 살 수 있어요.</p>
             </div>
           </div>
           <div className="bar-actions">
-            <Link to="/membership" className="btn btn-secondary">
-              요금제
+            <Link to="/membership#tokens" className="btn btn-secondary">
+              토큰 · 이용권
             </Link>
             <button className="btn btn-primary" onClick={next}>
               계속 연습

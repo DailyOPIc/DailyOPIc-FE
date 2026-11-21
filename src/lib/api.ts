@@ -35,8 +35,18 @@ export type QuestionSet = {
 export type Usage = {
   freeRemaining: number;
   bonusRemaining: number;
+  /** 웹에서 산 보유 토큰(매일 사라지지 않음). 하루 토큰을 다 쓰면 여기서 쓴다. */
+  purchasedTokens?: number;
   resetsAt?: string | null;
 };
+
+export type Wallet = {
+  plan: string;
+  webPass: { plan: string; expiresAt: string } | null;
+  purchasedTokens: number;
+};
+
+export type WebOrder = { orderId: string; orderName: string; amount: number };
 
 export type Capabilities = { plan: string };
 
@@ -109,6 +119,11 @@ function messageFor(status: number) {
 export const api = {
   capabilities: () => request<Capabilities>("/v1/capabilities"),
   usage: () => request<Usage>("/v1/usage"),
+  wallet: () => request<Wallet>("/v1/web-payments/wallet"),
+  createOrder: (productId: string) =>
+    request<WebOrder>("/v1/web-payments/orders", { method: "POST", json: { productId } }),
+  confirmPayment: (body: { paymentKey: string; orderId: string; amount: number }) =>
+    request<Wallet>("/v1/web-payments/confirm", { method: "POST", json: body }),
   practiceSet: (body: { initialLevel: number; survey: Survey }, key: string) =>
     request<QuestionSet>("/v1/question-sets/practice", {
       method: "POST",
