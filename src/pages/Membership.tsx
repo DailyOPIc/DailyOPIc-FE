@@ -3,7 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { AppStoreButton } from "../components/Bits";
 import { api, type Wallet } from "../lib/api";
 import { useAuth } from "../lib/auth";
-import { PASS_PRODUCTS, startCheckout, TOKEN_PRODUCTS, webPaymentsEnabled, won } from "../lib/payments";
+import { PASS_PRODUCTS, startCheckout, TOKEN_PRODUCTS, tokenPacksEnabled, webPaymentsOpenFor, won } from "../lib/payments";
 import { CONTACT_EMAIL, PLANS } from "../site";
 
 const RANK: Record<string, number> = { free: 0, basic: 1, plus: 2, pro: 3 };
@@ -23,10 +23,11 @@ export function Membership() {
   const [wallet, setWallet] = useState<Wallet | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const enabled = webPaymentsOpenFor(user?.email);
 
   useEffect(() => {
-    if (user && webPaymentsEnabled) api.wallet().then(setWallet).catch(() => {});
-  }, [user]);
+    if (user && enabled) api.wallet().then(setWallet).catch(() => {});
+  }, [user, enabled]);
 
   const buy = async (productId: string) => {
     if (!user) return navigate(`/login?next=${encodeURIComponent("/membership")}`);
@@ -53,7 +54,7 @@ export function Membership() {
         <h1>필요한 만큼만, 가볍게</h1>
         <p className="lead">
           무료로 시작하고, 더 많이 연습하고 싶을 때 플랜을 고르세요.{" "}
-          {webPaymentsEnabled
+          {enabled
             ? "웹은 자동 결제 없는 30일 이용권, iPhone 앱은 월 구독이에요."
             : "모든 유료 플랜은 월 구독이에요."}
         </p>
@@ -95,7 +96,7 @@ export function Membership() {
                 <li key={b}>{b}</li>
               ))}
             </ul>
-            {webPaymentsEnabled && plan.id !== "free" && (
+            {enabled && plan.id !== "free" && (
               <button
                 className={`chunky ${plan.featured ? "chunky-primary" : "chunky-ghost"} plan-buy`}
                 disabled={busy !== null || blocked(plan.id)}
@@ -110,7 +111,7 @@ export function Membership() {
         ))}
       </section>
 
-      {webPaymentsEnabled && (
+      {enabled && tokenPacksEnabled && (
         <section className="container token-packs" id="tokens">
           <h2 className="section-title">토큰만 더 필요할 때</h2>
           <p className="lead">하루 토큰을 다 쓰면 보유 토큰에서 하나씩 써요. 매일 사라지지 않아요.</p>
@@ -128,7 +129,7 @@ export function Membership() {
       )}
 
       <section className="container notice-box">
-        {webPaymentsEnabled ? (
+        {enabled ? (
           <>
             <h2>iPhone 앱에서는 월 구독으로</h2>
             <p>앱의 프리미엄 화면에서 App Store 결제로 구독할 수 있어요. 앱 구독은 앱에서, 웹 이용권은 웹에서 관리해요.</p>
@@ -182,12 +183,12 @@ export function Membership() {
         </ul>
         <h2 className="section-title">구독 · 환불 안내</h2>
         <ul>
-          {webPaymentsEnabled && (
+          {enabled && (
             <>
               <li>웹 이용권과 토큰은 한 번만 결제되는 상품이에요. 자동으로 다시 결제되지 않아요.</li>
               <li>
-                웹 결제 환불은 <a href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a>로 요청해 주세요. 사용하지 않은
-                이용권 · 토큰은 결제 후 7일 이내 전액 환불돼요.
+                웹 결제 환불은 <a href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a>로 요청해 주세요. 7일 이내 미사용은
+                전액, 사용을 시작한 이용권은 남은 일수만큼 환불돼요.
               </li>
             </>
           )}

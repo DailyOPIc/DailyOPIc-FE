@@ -5,8 +5,21 @@ import { api } from "./api";
 
 const CLIENT_KEY = import.meta.env.VITE_TOSS_CLIENT_KEY as string | undefined;
 
-/** 클라이언트 키가 없으면(아직 결제 오픈 전) 구매 버튼을 숨기고 앱 구독 안내만 보여 준다. */
-export const webPaymentsEnabled = Boolean(CLIENT_KEY);
+// 웹 결제를 열 이메일(쉼표 구분). 비어 있으면 모두에게 열린다. 통신판매업 신고 전에는 토스 심사용 계정만.
+// 서버(WEB_PAYMENTS_ALLOWLIST)도 같은 목록으로 주문을 막는다 — 여기는 버튼 표시용.
+const ALLOWLIST = ((import.meta.env.VITE_WEB_PAYMENTS_ALLOWLIST as string | undefined) ?? "")
+  .split(",")
+  .map((email) => email.trim().toLowerCase())
+  .filter(Boolean);
+
+/** 토큰 팩 판매 스위치(퀵오픈 심사 확정 전에는 끈다). 서버는 WEB_TOKEN_PACKS_ENABLED. */
+export const tokenPacksEnabled = import.meta.env.VITE_TOKEN_PACKS === "on";
+
+/** 클라이언트 키가 없거나 허용 목록에 없는 사람에게는 구매 버튼을 숨기고 앱 구독 안내만 보여 준다. */
+export function webPaymentsOpenFor(email: string | null | undefined): boolean {
+  if (!CLIENT_KEY) return false;
+  return ALLOWLIST.length === 0 || ALLOWLIST.includes((email ?? "").toLowerCase());
+}
 
 export type WebProduct = { id: string; name: string; price: number };
 
