@@ -6,7 +6,7 @@
     },
     {
       "source": "/(.*)",
-      "has": [{ "type": "host", "value": "dailyopic.vercel.app" }],
+      "has": [{ "type": "host", "value": "(dailyopic\\.vercel\\.app|dev\\.dailyopic\\.link|dailyopic-dev.*\\.vercel\\.app)" }],
       "headers": [{ "key": "X-Robots-Tag", "value": "noindex" }]
     }
   ],
