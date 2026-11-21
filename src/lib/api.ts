@@ -1,4 +1,5 @@
 import { auth, appCheckToken } from "./firebase";
+import type { GameSet } from "./gamePool";
 import { inApp, nativeHeaders } from "./native";
 
 const BASE_URL =
@@ -167,6 +168,8 @@ export const api = {
   /** 계정 삭제: 서버의 학습 기록 · 사용량 · 웹 이용권 · 토큰과 로그인 계정을 지운다(결제 기록은 보존). */
   deleteAccount: () => request<void>("/v1/users/me", { method: "DELETE" }),
   wallet: () => request<Wallet>("/v1/web-payments/wallet"),
+  /** 오픽게임 하루 세트(서버가 AI로 하루 5세트, 모든 사용자 공용) */
+  gameSets: () => request<{ dateKey: string; sets: GameSet[] }>("/v1/games/daily-sets"),
   /** 활동 보상: 하루 한도 안에서 보너스 토큰 1개(보물상자 2 · 게임 1 · 하루 목표 1) */
   activityReward: (kind: "chest" | "game" | "goal") =>
     request<{ granted: boolean; bonusRemaining: number }>("/v1/activity-rewards", { method: "POST", json: { kind } }),

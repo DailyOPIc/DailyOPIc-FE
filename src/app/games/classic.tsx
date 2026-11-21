@@ -1,8 +1,9 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Icon } from "../../assets/Icon";
 import { Mascot } from "../../assets/Mascot";
-import { EXPRESSIONS, type Expression } from "../../data/expressions";
+import type { Expression } from "../../data/expressions";
 import { rng, seededShuffle } from "../../lib/challenge";
+import { freshFirst, gameExpressions } from "../../lib/gamePool";
 import { speak } from "../../lib/recorder";
 import { play } from "../../lib/sfx";
 import { clean, GameTop, type GameProps } from "./common";
@@ -10,7 +11,7 @@ import { clean, GameTop, type GameProps } from "./common";
 /* ───────── 1. 타자 연습 ───────── */
 
 export function Typing({ seed, onExit, onDone }: GameProps) {
-  const items = useMemo(() => seededShuffle(EXPRESSIONS, rng(seed)).slice(0, 8), [seed]);
+  const items = useMemo(() => freshFirst(gameExpressions(), seed).slice(0, 8), [seed]);
   const [i, setI] = useState(0);
   const [typed, setTyped] = useState("");
   const [combo, setCombo] = useState(0);
@@ -110,7 +111,8 @@ export function Typing({ seed, onExit, onDone }: GameProps) {
 const QUIZ_SECONDS = 12;
 
 export function Meaning({ seed, onExit, onDone }: GameProps) {
-  const items = useMemo(() => seededShuffle(EXPRESSIONS, rng(seed)).slice(0, 10), [seed]);
+  const pool = useMemo(gameExpressions, []);
+  const items = useMemo(() => freshFirst(pool, seed).slice(0, 10), [pool, seed]);
   const [i, setI] = useState(0);
   const [hearts, setHearts] = useState(3);
   const [combo, setCombo] = useState(0);
@@ -123,7 +125,7 @@ export function Meaning({ seed, onExit, onDone }: GameProps) {
 
   const options = useMemo(() => {
     const r = rng(seed + i * 7919);
-    const others = seededShuffle(EXPRESSIONS.filter((e) => e !== item), r).slice(0, 3);
+    const others = seededShuffle(pool.filter((e) => e !== item), r).slice(0, 3);
     return seededShuffle([item, ...others], r);
   }, [item, seed, i]);
   const answer = options.indexOf(item);
@@ -217,7 +219,7 @@ export function Meaning({ seed, onExit, onDone }: GameProps) {
 /* ───────── 3. 받아쓰기 ───────── */
 
 export function Dictation({ seed, onExit, onDone }: GameProps) {
-  const items = useMemo(() => seededShuffle(EXPRESSIONS.filter((e) => e.en.split(" ").length <= 6), rng(seed)).slice(0, 8), [seed]);
+  const items = useMemo(() => freshFirst(gameExpressions().filter((e) => e.en.split(" ").length <= 6), seed).slice(0, 8), [seed]);
   const [i, setI] = useState(0);
   const [value, setValue] = useState("");
   const [checked, setChecked] = useState<null | boolean>(null);
@@ -335,7 +337,7 @@ export function Dictation({ seed, onExit, onDone }: GameProps) {
 type Drop = { id: number; e: Expression; x: number; y: number; speed: number; popped?: number };
 
 export function Rain({ seed, onExit, onDone }: GameProps) {
-  const words = useMemo(() => EXPRESSIONS.filter((e) => e.en.length <= 18), []);
+  const words = useMemo(() => gameExpressions().filter((e) => e.en.length <= 18), []);
   const [, setTick] = useState(0);
   const [value, setValue] = useState("");
   const [hearts, setHearts] = useState(3);
