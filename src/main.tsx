@@ -9,6 +9,7 @@ import { PaymentResult } from "./pages/PaymentResult";
 import { Help } from "./pages/Help";
 import { Privacy } from "./pages/Privacy";
 import { Refund } from "./pages/Refund";
+import { Terms } from "./pages/Terms";
 import { NotFound } from "./pages/NotFound";
 import { Login } from "./pages/Login";
 import { StudyApp } from "./app/StudyApp";
@@ -27,7 +28,7 @@ function ScrollToTop() {
 
 // 검색에 공개하는 페이지(public/sitemap.xml과 같은 목록). 정식 주소는 www.
 const SITE = "https://www.dailyopic.link";
-const PUBLIC_PATHS = ["/", "/membership", "/help", "/privacy", "/refund"];
+const PUBLIC_PATHS = ["/", "/membership", "/help", "/privacy", "/refund", "/terms"];
 
 // 페이지별 제목 · 설명(검색 결과와 브라우저 탭에 보인다)
 const BRAND = "데일리오픽";
@@ -43,6 +44,7 @@ const PAGES: Record<string, { title: string; description?: string }> = {
   "/help": { title: `고객센터 · ${BRAND}`, description: "데일리 토큰, 구독 해지 · 환불, 녹음 문제 등 자주 묻는 질문과 문의 방법." },
   "/privacy": { title: `개인정보처리방침 · ${BRAND}`, description: "데일리오픽이 처리하는 정보와 이용 목적, 보관 · 파기, 이용자 권리 안내." },
   "/refund": { title: `환불 규정 · ${BRAND}`, description: "데일리오픽 웹 이용권과 App Store 구독의 청약철회 · 환불 기준과 신청 방법." },
+  "/terms": { title: `이용약관 · ${BRAND}`, description: "데일리오픽 서비스 이용 조건, 유료 서비스 · 결제, 이용자 의무와 책임을 안내합니다." },
   "/login": { title: `로그인 · ${BRAND}` },
   "/study": { title: `오늘의 학습 · ${BRAND}` },
   "/study/speak": { title: `랜덤 스피킹 · ${BRAND}` },
@@ -139,6 +141,7 @@ createRoot(document.getElementById("root")!).render(
           <Route path="/help" element={<Help />} />
           <Route path="/privacy" element={<Privacy />} />
           <Route path="/refund" element={<Refund />} />
+          <Route path="/terms" element={<Terms />} />
           <Route path="/login" element={<Login />} />
           <Route path="/study/*" element={<StudyApp />} />
           <Route path="/payments/success" element={<PaymentResult ok />} />

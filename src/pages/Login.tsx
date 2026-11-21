@@ -84,6 +84,7 @@ export function Login() {
 
         <div className="login-links">
           <Link to="/help">로그인에 어려움이 있나요?</Link>
+          <Link to="/terms">이용약관</Link>
           <Link to="/privacy">개인정보처리방침</Link>
         </div>
         <p className="login-note">iPhone 앱의 기존 기록은 아직 웹과 연결되지 않아요.</p>

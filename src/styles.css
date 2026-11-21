@@ -1839,8 +1839,9 @@ h3 {
 }
 .login-links {
   display: flex;
+  flex-wrap: wrap;
   justify-content: center;
-  gap: 20px;
+  gap: 8px 20px;
   margin-top: 32px;
   font-size: 14px;
 }
