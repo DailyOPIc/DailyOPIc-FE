@@ -15,6 +15,7 @@ export function Footer() {
             <Link to="/privacy">
               <strong>개인정보처리방침</strong>
             </Link>
+            <Link to="/refund">환불 규정</Link>
             <Link to="/help">고객센터</Link>
             <a href={APP_STORE_URL} target="_blank" rel="noreferrer">
               App Store
