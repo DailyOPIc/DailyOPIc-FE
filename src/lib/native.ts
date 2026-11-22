@@ -3,7 +3,7 @@
 // webkit.messageHandlers.dailyopic.postMessage({ action, ... }) 로 보낸다(WKScriptMessageHandlerWithReply라 Promise로 답이 온다).
 // 로그인 · 결제(인앱결제) · 계정 연결/삭제는 앱이 맡고, 웹은 화면만 그린다.
 
-type NativeInfo = { uid: string };
+type NativeInfo = { uid: string; speech?: boolean };
 type Bridge = { postMessage(body: { action: string; [key: string]: unknown }): Promise<unknown> };
 
 const w = window as unknown as {
@@ -13,6 +13,10 @@ const w = window as unknown as {
 
 export const nativeApp: NativeInfo | null = w.DailyOPIcNative ?? null;
 export const inApp = nativeApp !== null;
+/** 앱이 녹음 · 전사를 맡는지(2.3.1부터). 웹 음성 인식은 WKWebView에서 실행마다 마이크 허용을 따로 묻는다. */
+export const nativeSpeech = nativeApp?.speech === true;
+/** 앱이 인식 중인 문장을 보내는 이벤트(detail: 지금까지의 전사) */
+export const SPEECH_EVENT = "dailyopic:speech";
 
 export function callNative<T = unknown>(action: string, args: Record<string, unknown> = {}): Promise<T> {
   const bridge = w.webkit?.messageHandlers?.dailyopic;

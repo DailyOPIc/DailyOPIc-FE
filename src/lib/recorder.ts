@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
+import { callNative, nativeSpeech, SPEECH_EVENT } from "./native";
 
 // 브라우저 내장 음성 인식(Web Speech API). 타입이 표준 lib에 없어 최소한만 선언한다.
 type RecognitionEvent = { resultIndex: number; results: ArrayLike<{ isFinal: boolean; 0: { transcript: string } }> };
@@ -18,7 +19,7 @@ const Ctor: RecognitionCtor | undefined =
   (window as unknown as { SpeechRecognition?: RecognitionCtor }).SpeechRecognition ??
   (window as unknown as { webkitSpeechRecognition?: RecognitionCtor }).webkitSpeechRecognition;
 
-export const speechSupported = Boolean(Ctor && typeof MediaRecorder !== "undefined");
+export const speechSupported = nativeSpeech || Boolean(Ctor && typeof MediaRecorder !== "undefined");
 
 export const MAX_ANSWER_SECONDS = 180;
 
@@ -48,15 +49,31 @@ export function useAnswerRecorder() {
     window.clearInterval(timer.current);
     recognition.current?.stop();
     recorder.current?.stream.getTracks().forEach((t) => t.stop());
+    window.removeEventListener(SPEECH_EVENT, onNativeText);
     setListening(false);
   }, []);
 
-  useEffect(() => cleanup, [cleanup]);
+  useEffect(
+    () => () => {
+      // 화면을 떠나면 앱 녹음도 버린다(stop으로 결과를 받는 중이 아닐 때만 의미가 있다)
+      if (nativeSpeech && active.current) void callNative("speechCancel").catch(() => {});
+      cleanup();
+    },
+    [cleanup],
+  );
 
   const stop = useCallback(
     () =>
       new Promise<Recording>((resolve) => {
         if (!active.current) return resolve({ transcript: finalText.current.trim(), audio: null, seconds: elapsed() });
+        if (nativeSpeech) {
+          cleanup();
+          const seconds = elapsed();
+          void callNative<{ transcript: string; audio?: string }>("speechStop")
+            .then((r) => resolve({ transcript: r.transcript.trim(), audio: r.audio ? base64Blob(r.audio, "audio/mp4") : null, seconds }))
+            .catch(() => resolve({ transcript: finalText.current.trim(), audio: null, seconds }));
+          return;
+        }
         pendingStop.current = resolve;
         const rec = recorder.current;
         cleanup();
@@ -70,7 +87,40 @@ export function useAnswerRecorder() {
     [cleanup],
   );
 
+  const beginTimer = useCallback(() => {
+    setRemaining(MAX_ANSWER_SECONDS);
+    setListening(true);
+    startedAt.current = Date.now();
+    timer.current = window.setInterval(() => {
+      const left = MAX_ANSWER_SECONDS - Math.floor((Date.now() - startedAt.current) / 1000);
+      setRemaining(Math.max(0, left));
+      if (left <= 0) void stopRef.current().then((result) => onAutoStop.current?.(result));
+    }, 250);
+  }, []);
+  const stopRef = useRef(stop);
+  stopRef.current = stop;
+
   const start = useCallback(async () => {
+    if (nativeSpeech) {
+      setError(null);
+      setLiveText("");
+      finalText.current = "";
+      onNativeText = (e: Event) => {
+        finalText.current = String((e as CustomEvent).detail ?? "");
+        setLiveText(finalText.current);
+      };
+      window.addEventListener(SPEECH_EVENT, onNativeText);
+      try {
+        await callNative("speechStart");
+      } catch (e) {
+        window.removeEventListener(SPEECH_EVENT, onNativeText);
+        setError(e instanceof Error && e.message ? e.message : "마이크 · 음성 인식 권한이 필요해요. 설정 앱에서 허용해 주세요.");
+        return;
+      }
+      active.current = true;
+      beginTimer();
+      return;
+    }
     if (!Ctor) {
       setError("이 브라우저는 음성 인식을 지원하지 않아요. Chrome · Safari · Edge에서 이용해 주세요.");
       return;
@@ -120,18 +170,20 @@ export function useAnswerRecorder() {
     recognition.current = r;
     active.current = true;
     r.start();
-
-    setRemaining(MAX_ANSWER_SECONDS);
-    setListening(true);
-    startedAt.current = Date.now();
-    timer.current = window.setInterval(() => {
-      const left = MAX_ANSWER_SECONDS - Math.floor((Date.now() - startedAt.current) / 1000);
-      setRemaining(Math.max(0, left));
-      if (left <= 0) void stop().then((result) => onAutoStop.current?.(result));
-    }, 250);
-  }, [stop]);
+    beginTimer();
+  }, [beginTimer]);
 
   return { listening, liveText, remaining, error, start, stop, onAutoStop };
+}
+
+// 앱이 보내는 실시간 전사 리스너(한 번에 녹음 하나라 모듈에 하나만 둔다)
+let onNativeText: (e: Event) => void = () => {};
+
+function base64Blob(b64: string, type: string): Blob {
+  const bin = atob(b64);
+  const bytes = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+  return new Blob([bytes], { type });
 }
 
 // ── 질문 읽어주기(브라우저 내장 TTS). iOS의 AVSpeechSynthesizer 자리 ──

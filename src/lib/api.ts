@@ -241,7 +241,7 @@ export const api = {
     form.append("questionNumber", String(args.number));
     form.append("transcript", args.transcript);
     form.append("targetLevel", args.set.expectedTargetLevel);
-    if (args.audio) form.append("audio", args.audio, "answer.webm");
+    if (args.audio) form.append("audio", args.audio, `answer.${args.audio.type.includes("mp4") ? "m4a" : "webm"}`);
     return request<Evaluation>("/v2/evaluations/practice", { method: "POST", form, idempotencyKey: key });
   },
 };
