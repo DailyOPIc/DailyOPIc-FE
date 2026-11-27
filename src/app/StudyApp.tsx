@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import { Navigate, useLocation } from "react-router-dom";
 import { Mascot } from "../assets/Mascot";
-import { api, type ApiError, type Evaluation, type PathState, type Profile, type Usage } from "../lib/api";
+import { api, type ApiError, type Evaluation, type LevelProgress, type PathState, type Profile, type Usage } from "../lib/api";
 import { useAuth } from "../lib/auth";
 import { loadGame, recordActivity, type GameState, type Recorded } from "../lib/game";
 import { diffProfiles, importLegacyOnce, toGameState, type Gain } from "../lib/progress";
@@ -60,6 +60,7 @@ function Study({ uid }: { uid: string }) {
   // 레벨 · XP · 스트릭은 서버가 기준. 처음 받기 전에는 이 브라우저의 예전 값으로 그린다.
   const [game, setGame] = useState<GameState>(() => loadGame(uid));
   const profile = useRef<Profile | null>(null);
+  const [level, setLevel] = useState<LevelProgress | null>(null);
   const [lesson, setLesson] = useState<number | null>(null);
   const [busy, setBusy] = useState(false);
   const [, setLimitTick] = useState(0);
@@ -75,6 +76,7 @@ function Study({ uid }: { uid: string }) {
       const gain = diffProfiles(profile.current, after);
       profile.current = after;
       setGame(toGameState(after));
+      setLevel(after.progress);
       if (gain.goalJustReached) void claimActivityToken("goal", "오늘의 목표 달성");
       return gain;
     } catch {
@@ -261,7 +263,16 @@ function Study({ uid }: { uid: string }) {
 
   // 단어 게임 · 랜덤 스피킹 진행 화면은 각자 전체 화면을 쓰므로 틀 안에서도 그대로 보인다.
   return (
-    <AppShell uid={uid} game={game} tokens={tokens} plan={plan} coachReady={!loading} onEditPrefs={() => setEditing(true)}>
+    <AppShell
+      uid={uid}
+      game={game}
+      tokens={tokens}
+      level={level}
+      ads={usage?.adRewardsMax ? { used: usage.adRewardsUsed ?? 0, max: usage.adRewardsMax } : null}
+      plan={plan}
+      coachReady={!loading}
+      onEditPrefs={() => setEditing(true)}
+    >
       {content}
     </AppShell>
   );

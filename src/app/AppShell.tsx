@@ -1,5 +1,5 @@
-import { useState, type ReactNode } from "react";
-import { Link, NavLink } from "react-router-dom";
+import { useEffect, useState, type ReactNode } from "react";
+import { Link, NavLink, useNavigate } from "react-router-dom";
 import { Icon, type IconName } from "../assets/Icon";
 import { Mascot } from "../assets/Mascot";
 import { CoachMarks } from "./CoachMarks";
@@ -7,7 +7,11 @@ import { DeleteAccountDialog } from "./DeleteAccount";
 import { signOut } from "../lib/auth";
 import { callNative, inApp } from "../lib/native";
 import { canWatchAd, watchAdForToken } from "../lib/tokens";
+import type { LevelProgress } from "../lib/api";
 import { DAILY_GOAL, type GameState } from "../lib/game";
+import { levelFromXp } from "../lib/level";
+import { LEVEL_UP_EVENT } from "../lib/progress";
+import { Confetti } from "./Reward";
 import { FREE_DAILY, LIMIT_LABEL, used, type LimitKind } from "../lib/limits";
 import { isMuted, play, setMuted } from "../lib/sfx";
 
@@ -15,6 +19,10 @@ type Props = {
   uid: string;
   game: GameState;
   tokens: number | null;
+  /** 서버 레벨(없으면 XP로 계산) */
+  level?: LevelProgress | null;
+  /** 광고 보고 토큰 받기: 오늘 본 횟수 / 하루 최대 */
+  ads?: { used: number; max: number } | null;
   plan: string;
   /** 첫 화면(오늘의 문제)이 준비된 뒤에만 코치마크를 띄운다. 로딩 화면 위에 먼저 뜨지 않게. */
   coachReady: boolean;
@@ -32,8 +40,18 @@ const NAV: { to: string; label: string; tab?: string; icon: IconName; end?: bool
 ];
 
 /** 서비스 화면 틀: 사이트 헤더 · 푸터 없이 왼쪽 레일 + 가운데 학습 + 오른쪽 현황 */
-export function AppShell({ uid, game, tokens, plan, coachReady, onEditPrefs, children }: Props) {
+export function AppShell({ uid, game, tokens, level, ads, plan, coachReady, onEditPrefs, children }: Props) {
   const [menu, setMenu] = useState(false);
+  const [adDialog, setAdDialog] = useState(false);
+  const navigate = useNavigate();
+  const lv = level ?? { ...levelFromXp(game.xp), xp: game.xp };
+  // + 버튼: 앱(무료)은 광고 보고 토큰 받기, 그 밖에는 토큰 · 이용권 안내
+  const onPlus = () => {
+    play("tap", { volume: 0.5 });
+    if (canWatchAd(plan)) setAdDialog(true);
+    else navigate("/membership#tokens");
+  };
+  const stats = (compact?: boolean) => <Stats game={game} level={lv} tokens={tokens} compact={compact} onPlus={onPlus} />;
   const [muted, setMute] = useState(isMuted);
   const [deleting, setDeleting] = useState(false);
 
@@ -92,6 +110,7 @@ export function AppShell({ uid, game, tokens, plan, coachReady, onEditPrefs, chi
           <img src="/images/logo-mark.png" alt="" width={34} height={34} />
           데일리오픽
         </Link>
+        <div className="rail-stats">{stats(true)}</div>
         <nav className="rail-nav">{nav}</nav>
       </aside>
 
@@ -99,16 +118,7 @@ export function AppShell({ uid, game, tokens, plan, coachReady, onEditPrefs, chi
         <Link to="/" className="topbar-logo" aria-label="데일리오픽 홈">
           <img src="/images/logo-mark.png" alt="" width={30} height={30} />
         </Link>
-        <Stats
-          game={game}
-          tokens={tokens}
-          compact
-          onToken={
-            canWatchAd(plan)
-              ? () => window.confirm("광고를 보고 오늘 쓸 토큰 1개를 받을까요?") && void watchAdForToken()
-              : undefined
-          }
-        />
+        {stats(true)}
         <button className="icon-btn" aria-expanded={menu} aria-label="메뉴" onClick={() => setMenu((v) => !v)}>
           <Icon name={menu ? "close" : "menu"} size={24} />
         </button>
@@ -121,6 +131,8 @@ export function AppShell({ uid, game, tokens, plan, coachReady, onEditPrefs, chi
 
       <main className="app-main">{children}</main>
       {deleting && <DeleteAccountDialog onClose={() => setDeleting(false)} />}
+      {adDialog && <AdDialog ads={ads ?? null} onClose={() => setAdDialog(false)} />}
+      <LevelUpToast />
       {coachReady && <CoachMarks uid={uid} />}
 
       <nav className="tabbar" aria-label="학습 메뉴">
@@ -133,7 +145,7 @@ export function AppShell({ uid, game, tokens, plan, coachReady, onEditPrefs, chi
       </nav>
 
       <aside className="side">
-        <Stats game={game} tokens={tokens} />
+        {stats()}
         <GoalCard game={game} />
         {plan === "free" && <FreeLimits uid={uid} />}
         {plan === "free" && (
@@ -152,7 +164,7 @@ export function AppShell({ uid, game, tokens, plan, coachReady, onEditPrefs, chi
           <Icon name="sparkle" size={28} />
           <p>
             <b>무료로 계속 연습하기</b>
-            말하기 연습 · 간단 체크 · 랜덤 스피킹 · 단어 게임은 토큰 없이 무제한이에요. 토큰은 AI 정밀 분석에만 써요.
+            보물상자 · 오픽게임 · 하루 목표로 토큰을 더 받을 수 있어요. 학습 단계는 AI 분석까지 받으면 끝나요.
           </p>
         </div>
       </aside>
@@ -160,27 +172,93 @@ export function AppShell({ uid, game, tokens, plan, coachReady, onEditPrefs, chi
   );
 }
 
-function Stats({ game, tokens, compact, onToken }: { game: GameState; tokens: number | null; compact?: boolean; onToken?: () => void }) {
+function Stats({ game, level, tokens, compact, onPlus }: { game: GameState; level: LevelProgress; tokens: number | null; compact?: boolean; onPlus: () => void }) {
+  const size = compact ? 22 : 26;
   return (
     <div className={compact ? "stats-row compact" : "stats-row"}>
       <span className={`stat-chip streak${game.streak > 0 ? " lit" : ""}`} title="연속 학습일" data-coach="streak">
-        <Icon name="flame" size={compact ? 22 : 26} /> <b>{game.streak}</b>
+        <Icon name="flame" size={size} /> <b>{game.streak}</b>
       </span>
-      <span className="stat-chip xp" title="경험치" data-coach="xp">
-        <Icon name="bolt" size={compact ? 22 : 26} /> <b>{game.xp}</b>
-      </span>
-      {onToken ? (
-        // 앱(무료): 토큰을 누르면 광고 보고 1개 더 받기
-        <button className="stat-chip token" title="광고 보고 토큰 받기" data-coach="token" onClick={onToken}>
-          <Icon name="coin" size={compact ? 22 : 26} /> <b>{tokens ?? "–"}</b>
-          <span className="chip-plus" aria-hidden="true">+</span>
-        </button>
-      ) : (
-        <span className="stat-chip token" title="오늘 남은 토큰" data-coach="token">
-          <Icon name="coin" size={compact ? 22 : 26} /> <b>{tokens ?? "–"}</b>
+      <span className="stat-chip level" title={`레벨 ${level.level} · 다음 레벨까지 ${level.levelNeed - level.levelXp} XP`} data-coach="level">
+        <b>Lv.{level.level}</b>
+        <span className="xp-mini" aria-hidden="true">
+          <span style={{ transform: `scaleX(${level.levelXp / level.levelNeed})` }} />
         </span>
-      )}
+      </span>
+      <span className="stat-chip token" title="오늘 남은 토큰" data-coach="token">
+        <Icon name="coin" size={size} /> <b>{tokens ?? "–"}</b>
+      </span>
+      <button className="token-plus" onClick={onPlus} aria-label="토큰 더 받기" data-coach="plus">
+        +
+      </button>
     </div>
+  );
+}
+
+/** 광고 보고 토큰 1개 받기(앱 · 무료). 오늘 본 횟수 / 하루 최대를 함께 보여 준다. */
+function AdDialog({ ads, onClose }: { ads: { used: number; max: number } | null; onClose: () => void }) {
+  const [busy, setBusy] = useState(false);
+  const left = ads ? Math.max(0, ads.max - ads.used) : 1;
+  return (
+    <div className="dialog-backdrop" role="presentation" onClick={busy ? undefined : onClose}>
+      <div className="dialog ad-dialog" role="dialog" aria-modal="true" aria-labelledby="ad-title" onClick={(e) => e.stopPropagation()}>
+        <Icon name="coin" size={56} />
+        <h2 id="ad-title">광고 보고 토큰 받기</h2>
+        <p>광고를 끝까지 보면 오늘 쓸 토큰 1개를 받아요. 토큰은 AI 분석 · 새 단계에 써요.</p>
+        {ads && (
+          <p className="ad-count">
+            오늘 <b>{ads.used}</b> / {ads.max}회
+          </p>
+        )}
+        <div className="row-actions">
+          <button className="btn btn-ghost" onClick={onClose} disabled={busy}>
+            닫기
+          </button>
+          <button
+            className="btn btn-primary"
+            disabled={busy || left === 0}
+            onClick={() => {
+              setBusy(true);
+              void watchAdForToken().finally(() => {
+                setBusy(false);
+                onClose();
+              });
+            }}
+          >
+            {left === 0 ? "오늘은 모두 받았어요" : busy ? "광고 불러오는 중…" : "광고 보기"}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/** 레벨이 오르면 잠깐 축하 */
+function LevelUpToast() {
+  const [level, setLevel] = useState<number | null>(null);
+  useEffect(() => {
+    let timer = 0;
+    const on = (e: Event) => {
+      setLevel(Number((e as CustomEvent).detail));
+      play("fanfare");
+      window.clearTimeout(timer);
+      timer = window.setTimeout(() => setLevel(null), 2600);
+    };
+    window.addEventListener(LEVEL_UP_EVENT, on);
+    return () => {
+      window.removeEventListener(LEVEL_UP_EVENT, on);
+      window.clearTimeout(timer);
+    };
+  }, []);
+  if (level === null) return null;
+  return (
+    <>
+      <Confetti />
+      <div className="levelup-toast" role="status">
+        <span>LEVEL UP</span>
+        <b>Lv.{level}</b>
+      </div>
+    </>
   );
 }
 

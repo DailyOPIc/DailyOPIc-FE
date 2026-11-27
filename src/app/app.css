@@ -4068,3 +4068,118 @@ button.stat-chip {
     width: 100%;
   }
 }
+
+/* ═════════ 상단 현황: 레벨 칩 · 토큰 칩 · 따로 떨어진 + 버튼 ═════════ */
+.stat-chip.level {
+  flex-direction: column;
+  gap: 3px;
+}
+.stat-chip.level b {
+  font-size: 15px;
+  color: var(--primary);
+  line-height: 1;
+}
+.xp-mini {
+  display: block;
+  width: 70%;
+  max-width: 64px;
+  height: 6px;
+  border-radius: 999px;
+  background: #e8e5f2;
+  overflow: hidden;
+}
+.xp-mini span {
+  display: block;
+  height: 100%;
+  background: var(--gold);
+  transform-origin: left;
+  transition: transform 0.6s var(--ease-out);
+}
+.token-plus {
+  flex: 0 0 auto;
+  align-self: center;
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border: 0;
+  border-radius: 50%;
+  background: var(--gold);
+  box-shadow: 0 3px 0 var(--gold-deep);
+  color: #fff;
+  font-size: 22px;
+  font-weight: 900;
+  line-height: 1;
+  cursor: pointer;
+}
+.token-plus:active {
+  transform: translateY(3px);
+  box-shadow: none;
+}
+.stats-row.compact .token-plus {
+  width: 32px;
+  height: 32px;
+  font-size: 20px;
+}
+/* 왼쪽 레일의 현황: 오른쪽 현황판이 숨는 중간 폭(761~1100px)에서만 */
+.rail-stats {
+  display: none;
+}
+@media (min-width: 761px) and (max-width: 1100px) {
+  .rail-stats {
+    display: block;
+    margin: 4px 0 12px;
+  }
+  .rail-stats .stats-row {
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  .rail-stats .stat-chip {
+    flex: 1 1 40%;
+    min-height: 38px;
+    font-size: 15px;
+  }
+}
+.ad-dialog {
+  text-align: center;
+}
+.ad-dialog .ico {
+  margin: 0 auto;
+}
+.ad-count {
+  font-weight: 800;
+  color: var(--ink-2);
+}
+.ad-count b {
+  color: var(--primary);
+}
+.levelup-toast {
+  position: fixed;
+  top: 30%;
+  left: 50%;
+  z-index: 1200;
+  display: grid;
+  justify-items: center;
+  gap: 4px;
+  padding: 20px 34px;
+  border-radius: 24px;
+  background: var(--primary);
+  color: #fff;
+  box-shadow: 0 8px 0 var(--primary-deep), 0 24px 40px -12px rgba(75, 36, 255, 0.6);
+  transform: translateX(-50%);
+  animation: levelup-pop 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+  pointer-events: none;
+}
+.levelup-toast span {
+  font-size: 13px;
+  font-weight: 900;
+  letter-spacing: 0.2em;
+  color: #ffd66b;
+}
+.levelup-toast b {
+  font-size: 38px;
+  font-weight: 900;
+}
+@keyframes levelup-pop {
+  from { opacity: 0; transform: translateX(-50%) scale(0.4); }
+}
