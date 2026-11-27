@@ -88,7 +88,7 @@ export function DevPreview() {
       />
     );
   return (
-    <AppShell uid="dev" game={GAME} tokens={1} plan={new URLSearchParams(window.location.search).get("plan") ?? "free"} onEditPrefs={() => {}}>
+    <AppShell uid="dev" game={GAME} tokens={1} coachReady plan={new URLSearchParams(window.location.search).get("plan") ?? "free"} onEditPrefs={() => {}}>
       {view === "mock" ? (
         <MockExam
           prefs={PREFS}

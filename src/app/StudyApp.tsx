@@ -199,6 +199,7 @@ function Study({ uid }: { uid: string }) {
   };
 
   let content: ReactNode;
+  let loading = false;
   if (view === "speak" && prefs) content = <RandomSpeak uid={uid} plan={plan} prefs={prefs} onReward={reward} onLimitUse={onLimitUse} />;
   else if (view === "mock" && prefs) content = <MockExam prefs={prefs} usage={usage} onChanged={() => void refreshUsage()} onReward={reward} />;
   else if (view === "activity") content = <Activity uid={uid} game={game} />;
@@ -231,11 +232,14 @@ function Study({ uid }: { uid: string }) {
         </button>
       </Splash>
     );
-  else content = <Splash text="오늘의 문제를 준비하고 있어요…" inline />;
+  else {
+    loading = true;
+    content = <Splash text="오늘의 문제를 준비하고 있어요…" inline />;
+  }
 
   // 단어 게임 · 랜덤 스피킹 진행 화면은 각자 전체 화면을 쓰므로 틀 안에서도 그대로 보인다.
   return (
-    <AppShell uid={uid} game={game} tokens={tokens} plan={plan} onEditPrefs={() => setEditing(true)}>
+    <AppShell uid={uid} game={game} tokens={tokens} plan={plan} coachReady={!loading} onEditPrefs={() => setEditing(true)}>
       {content}
     </AppShell>
   );

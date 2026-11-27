@@ -16,6 +16,8 @@ type Props = {
   game: GameState;
   tokens: number | null;
   plan: string;
+  /** 첫 화면(오늘의 문제)이 준비된 뒤에만 코치마크를 띄운다. 로딩 화면 위에 먼저 뜨지 않게. */
+  coachReady: boolean;
   onEditPrefs: () => void;
   children: ReactNode;
 };
@@ -30,7 +32,7 @@ const NAV: { to: string; label: string; tab?: string; icon: IconName; end?: bool
 ];
 
 /** 서비스 화면 틀: 사이트 헤더 · 푸터 없이 왼쪽 레일 + 가운데 학습 + 오른쪽 현황 */
-export function AppShell({ uid, game, tokens, plan, onEditPrefs, children }: Props) {
+export function AppShell({ uid, game, tokens, plan, coachReady, onEditPrefs, children }: Props) {
   const [menu, setMenu] = useState(false);
   const [muted, setMute] = useState(isMuted);
   const [deleting, setDeleting] = useState(false);
@@ -119,7 +121,7 @@ export function AppShell({ uid, game, tokens, plan, onEditPrefs, children }: Pro
 
       <main className="app-main">{children}</main>
       {deleting && <DeleteAccountDialog onClose={() => setDeleting(false)} />}
-      <CoachMarks uid={uid} />
+      {coachReady && <CoachMarks uid={uid} />}
 
       <nav className="tabbar" aria-label="학습 메뉴">
         {NAV.filter((n) => n.tab).map((n) => (
