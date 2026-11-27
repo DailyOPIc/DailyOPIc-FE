@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { Icon } from "../assets/Icon";
 import { Mascot, type Mood } from "../assets/Mascot";
 import { api, type ApiError, type Evaluation, type QuestionSet } from "../lib/api";
-import type { Recorded } from "../lib/game";
+import type { Gain } from "../lib/progress";
 import { quickCheck, type QuickCheck } from "../lib/quickcheck";
 import { speak, speechSupported, useAnswerRecorder, type Recording } from "../lib/recorder";
 import { play } from "../lib/sfx";
@@ -17,24 +17,27 @@ type Phase = "ready" | "recording" | "checked" | "analyzing" | "result" | "quota
 type Props = {
   set: QuestionSet;
   index: number;
+  /** 화면에 보이는 단계 번호(묶음을 넘어 이어지는 번호) */
+  stepNumber: number;
+  done: number;
+  steps: number;
   results: Record<number, Evaluation>;
-  practiced: Record<number, QuickCheck>;
   plan: string;
   tokens: number | null;
   onClose: () => void;
-  onGo: (index: number) => void;
-  onPracticed: (number: number, check: QuickCheck) => Recorded | null;
-  onEvaluated: (number: number, evaluation: Evaluation) => Recorded;
+  /** 이 단계를 끝내고 다음 단계로(묶음의 마지막 단계면 경로로) */
+  onNext: () => void;
+  onEvaluated: (number: number, evaluation: Evaluation) => Promise<Gain | null>;
 };
 
-/** 문항 하나: 듣기 → 말하기 → 무료 간단 체크(별 · 팁) → (선택) AI 정밀 분석(토큰 1) */
+/** 학습 단계 하나: 듣기 → 말하기 → 간단 체크 → AI 분석(토큰 1)까지 해야 단계 완료. 건너뛰기는 없다. */
 export function Lesson(props: Props) {
-  const { set, index, results, practiced, plan, tokens, onClose, onGo } = props;
+  const { set, index, stepNumber, done, steps, results, plan, tokens, onClose, onNext } = props;
   const question = set.questions[index];
   const [phase, setPhase] = useState<Phase>(results[question.number] ? "result" : "ready");
   const [pending, setPending] = useState<Recording | null>(null);
   const [check, setCheck] = useState<QuickCheck | null>(null);
-  const [reward, setReward] = useState<Recorded | null>(null);
+  const [reward, setReward] = useState<Gain | null>(null);
   const [showDetail, setShowDetail] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const recorder = useAnswerRecorder();
@@ -42,7 +45,6 @@ export function Lesson(props: Props) {
   const result = results[question.number];
   const section = SECTION[question.examSection] ?? SECTION.practice;
   const isLast = index >= set.questions.length - 1;
-  const doneCount = set.questions.filter((q) => results[q.number] || practiced[q.number]).length;
 
   const finishRecording = (r: Recording) => {
     play("rec_stop");
@@ -53,9 +55,7 @@ export function Lesson(props: Props) {
       setPhase("ready");
       return;
     }
-    const c = quickCheck(r.transcript, r.seconds);
-    setCheck(c);
-    setReward(props.onPracticed(question.number, c));
+    setCheck(quickCheck(r.transcript, r.seconds));
     setPhase("checked");
   };
 
@@ -98,9 +98,9 @@ export function Lesson(props: Props) {
         { set, number: question.number, transcript: pending.transcript, audio: pending.audio },
         evalKey.current,
       );
-      setReward(props.onEvaluated(question.number, evaluation));
       play("correct");
       setPhase("result");
+      setReward(await props.onEvaluated(question.number, evaluation));
     } catch (e) {
       const err = e as ApiError;
       play("wrong", { volume: 0.5 });
@@ -114,8 +114,7 @@ export function Lesson(props: Props) {
 
   const next = () => {
     play("tap", { volume: 0.5 });
-    if (isLast) onClose();
-    else onGo(index + 1);
+    onNext();
   };
 
   const mood: Mood =
@@ -124,7 +123,7 @@ export function Lesson(props: Props) {
   const bubble =
     phase === "recording" ? "듣고 있어요! 영어로 쭉 말해 보세요"
     : phase === "analyzing" ? "AI가 답변을 꼼꼼히 보고 있어요…"
-    : phase === "checked" ? (check && check.stars >= 2 ? "오, 흐름이 좋은데요?" : "좋아요! 팁 보고 한 번 더?")
+    : phase === "checked" ? (check && check.stars >= 2 ? "오, 흐름이 좋은데요? AI 분석으로 단계를 끝내요" : "좋아요! 다시 말하거나 AI 분석으로 끝내요")
     : phase === "result" ? "진단 결과가 나왔어요"
     : "질문을 듣고, 마이크를 눌러 답해 보세요";
 
@@ -135,12 +134,15 @@ export function Lesson(props: Props) {
         <button className="icon-btn" onClick={onClose} aria-label="학습 경로로 돌아가기">
           <Icon name="close" size={22} />
         </button>
-        <div className="lesson-progress" aria-label={`${doneCount} / ${set.questions.length}`}>
-          <span style={{ transform: `scaleX(${Math.max(0.03, doneCount / set.questions.length)})` }} />
+        <div className="lesson-progress" aria-label={`${done} / ${steps}`}>
+          <span style={{ transform: `scaleX(${Math.max(0.03, done / steps)})` }} />
         </div>
         <span className="lesson-count">
-          Q{question.number}
-          <small>/15</small>
+          {stepNumber}
+          <small>단계</small>
+        </span>
+        <span className="bar-token" title="오늘 남은 AI 분석 토큰">
+          <Icon name="coin" size={20} /> {tokens ?? "–"}
         </span>
       </header>
 
@@ -197,9 +199,7 @@ export function Lesson(props: Props) {
                 </p>
               </>
             ) : (
-              <p className="mic-caption">
-                {practiced[question.number] ? "다시 말해 보면 별을 더 받을 수 있어요" : "말하기 연습은 무료예요"}
-              </p>
+              <p className="mic-caption">가운데 버튼을 눌러 영어로 답해요</p>
             )}
           </div>
         )}
@@ -232,22 +232,19 @@ export function Lesson(props: Props) {
         <footer className="lesson-bar sheet practiced">
           <div className="sheet-head">
             <div>
-              <strong>{reward ? "연습 완료!" : "다시 말했어요"}</strong>
-              <p>{reward ? <RewardChips reward={reward} /> : "같은 문항 반복은 경험치 없이 연습만 돼요"}</p>
+              <strong>답변을 받았어요</strong>
+              <p>AI 분석까지 받으면 이 단계가 끝나요.</p>
             </div>
           </div>
           <div className="bar-actions">
             <button className="btn btn-ghost" onClick={record}>
-              <Icon name="refresh" size={18} /> 다시
+              <Icon name="refresh" size={18} /> 다시 말하기
             </button>
-            <button className="btn btn-secondary" onClick={analyze} title="데일리 토큰 1개">
-              <Icon name="sparkle" size={20} /> AI 분석
+            <button className="btn btn-primary" onClick={analyze} title="데일리 토큰 1개">
+              <Icon name="sparkle" size={20} /> AI 분석하고 완료
               <span className="cost">
                 <Icon name="coin" size={16} />1
               </span>
-            </button>
-            <button className="btn btn-primary" onClick={next}>
-              {isLast ? "완료" : "다음"}
             </button>
           </div>
         </footer>
@@ -259,7 +256,7 @@ export function Lesson(props: Props) {
             <span className="grade-badge">{result.predictedLevel}</span>
             <div>
               <strong>{reward ? cheer(result.predictedLevel) : "이전에 받은 AI 진단이에요"}</strong>
-              <p>{reward ? <RewardChips reward={reward} /> : "다시 말하면 새로 연습할 수 있어요."}</p>
+              <p>{reward ? <RewardChips reward={reward} /> : "끝낸 단계예요. 다시 말하면 새로 분석받을 수 있어요."}</p>
             </div>
           </div>
           <div className="bar-actions">
@@ -270,7 +267,7 @@ export function Lesson(props: Props) {
               {showDetail ? "진단 접기" : "진단 보기"}
             </button>
             <button className="btn btn-primary" onClick={next}>
-              {isLast ? "완료" : "계속"}
+              {isLast ? "경로로" : "다음 단계"}
             </button>
           </div>
         </footer>
@@ -282,7 +279,7 @@ export function Lesson(props: Props) {
             <Icon name="coin" size={48} />
             <div>
               <strong>오늘의 AI 분석 토큰을 다 썼어요</strong>
-              <p>말하기 연습 · 간단 체크 · 단어 게임은 계속 무료예요. 토큰은 자정에 다시 채워지고, 바로 더 쓰려면 토큰을 살 수 있어요.</p>
+              <p>단계를 끝내려면 AI 분석이 필요해요. 토큰은 자정에 다시 채워져요. 보물상자 · 오픽게임으로도 토큰을 받을 수 있어요.</p>
             </div>
           </div>
           <div className="bar-actions">
@@ -298,38 +295,18 @@ export function Lesson(props: Props) {
                 토큰 · 이용권
               </Link>
             )}
-            <button className="btn btn-primary" onClick={next}>
-              계속 연습
+            <button className="btn btn-primary" onClick={onClose}>
+              경로로
             </button>
           </div>
         </footer>
       )}
 
-      {(phase === "ready" || phase === "recording" || phase === "analyzing") && (
+      {phase === "analyzing" && (
         <footer className="lesson-bar">
-          {phase === "ready" && (
-            <>
-              <button className="btn btn-ghost" onClick={next}>
-                건너뛰기
-              </button>
-              <span className="bar-token" title="오늘 남은 AI 분석 토큰">
-                <Icon name="coin" size={20} /> {tokens ?? "–"}
-              </span>
-              <button className="btn btn-primary" onClick={record} disabled={!speechSupported}>
-                말하기 시작
-              </button>
-            </>
-          )}
-          {phase === "recording" && (
-            <button className="btn btn-danger btn-wide" onClick={record}>
-              답변 완료
-            </button>
-          )}
-          {phase === "analyzing" && (
-            <button className="btn btn-primary btn-wide" disabled>
-              분석 중…
-            </button>
-          )}
+          <button className="btn btn-primary btn-wide" disabled>
+            분석 중…
+          </button>
         </footer>
       )}
     </div>

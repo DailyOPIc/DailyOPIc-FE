@@ -2,7 +2,6 @@
 import { useState } from "react";
 import type { Evaluation, QuestionSet } from "../lib/api";
 import type { GameState, Recorded } from "../lib/game";
-import { quickCheck } from "../lib/quickcheck";
 import { AppShell } from "./AppShell";
 import { Activity } from "./Activity";
 import { Lesson } from "./Lesson";
@@ -39,10 +38,6 @@ const EVAL: Evaluation = {
 };
 const GAME: GameState = { xp: 120, streak: 4, bestStreak: 6, lastDay: null, today: "", todayCount: 2 };
 const REWARD: Recorded = { state: { ...GAME, streak: 5, todayCount: 3 }, gained: 10, streakUp: true, goalJustReached: true };
-const QC = quickCheck(
-  "To be honest, I go to a cafe near my house because it is quiet. On top of that, the coffee is really good. So I usually study there, and also I meet my friends there on weekends. That's why I love it.",
-  42,
-);
 
 const PREFS = { initialLevel: 5, survey: { status: "student", residence: "family", leisure: ["movies", "cafes"], hobbies: [], sports: ["jogging"], travel: [] } };
 const MOCK_SESSION = {
@@ -65,7 +60,8 @@ function seedActivity() {
 }
 
 export function DevPreview() {
-  const view = new URLSearchParams(window.location.search).get("view") ?? "path";
+  const params = new URLSearchParams(window.location.search);
+  const view = params.get("view") ?? "path";
   const [results, setResults] = useState<Record<number, Evaluation>>({ 2: EVAL, 3: { ...EVAL, predictedLevel: "IH" } });
 
   if (view === "onboarding") return <Onboarding onDone={() => {}} />;
@@ -74,16 +70,17 @@ export function DevPreview() {
       <Lesson
         set={SET}
         index={view === "result" ? 0 : 3}
+        stepNumber={view === "result" ? 1 : 4}
+        done={3}
+        steps={10}
         results={results}
-        practiced={{ 4: QC }}
         plan="free"
         tokens={1}
         onClose={() => {}}
-        onGo={() => {}}
-        onPracticed={() => REWARD}
-        onEvaluated={(n, e) => {
+        onNext={() => {}}
+        onEvaluated={async (n, e) => {
           setResults({ ...results, [n]: e });
-          return REWARD;
+          return { ...REWARD, leveledUp: false, level: 3 };
         }}
       />
     );
@@ -104,7 +101,24 @@ export function DevPreview() {
       ) : view === "speak" ? (
         <RandomSpeak uid="dev" plan={new URLSearchParams(window.location.search).get("plan") ?? "free"} prefs={{ initialLevel: 5, survey: { status: "student", residence: "family", leisure: ["movies", "cafes"], hobbies: [], sports: ["jogging"], travel: [] } }} onReward={() => REWARD} onLimitUse={() => {}} />
       ) : (
-        <PathHome set={SET} results={results} practiced={{ 4: QC, 5: { ...QC, stars: 1 } }} openedChests={[]} busy={false} onOpen={() => {}} onChest={() => {}} onNewSet={() => {}} />
+        <PathHome
+          path={{
+            chapter: Number(params.get("chapter") ?? 1),
+            set: { ...SET, questions: SET.questions.slice(0, 10).map((q, i) => ({ ...q, number: i + 1 })) },
+            done: Number(params.get("done") ?? 3),
+            steps: 10,
+            chestSlots: [4, 8, 10],
+            claimedChests: [],
+            nextLocked: params.get("locked") === "1",
+          }}
+          results={{ 1: EVAL, 2: { ...EVAL, predictedLevel: "IH" } }}
+          fresh={params.get("fresh") === "1"}
+          busy={false}
+          plan="free"
+          onOpen={() => {}}
+          onChest={() => {}}
+          onNextChapter={() => {}}
+        />
       )}
     </AppShell>
   );

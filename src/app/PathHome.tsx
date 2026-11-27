@@ -1,9 +1,10 @@
-import { useLayoutEffect, useRef, useState, type CSSProperties } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { Link } from "react-router-dom";
 import { Icon, type IconName } from "../assets/Icon";
 import { Mascot } from "../assets/Mascot";
-import type { Evaluation, QuestionSet } from "../lib/api";
-import type { QuickCheck } from "../lib/quickcheck";
+import type { Evaluation, PathState } from "../lib/api";
 import { play } from "../lib/sfx";
+import { Confetti } from "./Reward";
 
 export const SECTION: Record<string, { label: string; icon: IconName }> = {
   introduction: { label: "자기소개", icon: "chat" },
@@ -15,198 +16,193 @@ export const SECTION: Record<string, { label: string; icon: IconName }> = {
   practice: { label: "연습", icon: "target" },
 };
 
-// 이 문항(인덱스)까지 다 하면 상자가 열린다(5문항마다).
-export const CHEST_AFTER = [4, 9];
-
 type Props = {
-  set: QuestionSet;
+  path: PathState;
   results: Record<number, Evaluation>;
-  practiced: Record<number, QuickCheck>;
-  openedChests: number[];
+  /** 방금 새 묶음이 열렸다 → 단계들이 아래에서 위로 하나씩 튀어나온다 */
+  fresh: boolean;
   busy: boolean;
+  plan: string;
   onOpen: (index: number) => void;
-  onChest: (afterIndex: number) => void;
-  onNewSet: () => void;
+  onChest: (slot: number) => void;
+  onNextChapter: () => void;
 };
 
-type Cell = { kind: "q"; index: number } | { kind: "chest"; after: number } | { kind: "trophy" };
+type Item = { kind: "step"; n: number } | { kind: "chest"; slot: number };
 
-/** 폭에 맞춰 열 수를 정한다: 넓으면 6, 중간 5, 좁으면 4, 아주 좁으면(320px 폰) 3. */
-function useColumns() {
+const ROW = 124; // 칸 사이 세로 간격(px): 동그라미 + 이름표가 이웃 칸과 겹치지 않게
+const PAD = 70; // 위 · 아래 여백
+// 듀오링고처럼 좌우로 굽이치는 길: 칸마다 가운데에서 벗어나는 비율
+const WAVE = [0, 0.55, 0.9, 0.55, 0, -0.55, -0.9, -0.55];
+
+function useWidth() {
   const ref = useRef<HTMLDivElement>(null);
-  const [cols, setCols] = useState(5);
-  // 첫 그리기 전에 한 번 재서 깜빡임 없이 시작하고, 이후 크기 변화는 ResizeObserver로
+  const [width, setWidth] = useState(360);
   useLayoutEffect(() => {
     const el = ref.current;
     if (!el) return;
-    const pick = (w: number) => setCols(w >= 720 ? 6 : w >= 500 ? 5 : w >= 300 ? 4 : 3);
-    pick(el.clientWidth);
-    const ro = new ResizeObserver(([e]) => pick(e.contentRect.width));
+    setWidth(el.clientWidth);
+    const ro = new ResizeObserver(([e]) => setWidth(e.contentRect.width));
     ro.observe(el);
     return () => ro.disconnect();
   }, []);
-  return { ref, cols };
+  return { ref, width };
 }
 
-/** 판 안 각 칸의 동그라미 중심(px)과 판 크기. 판 크기가 바뀌면 다시 잰다. */
-function useTrail(ref: React.RefObject<HTMLDivElement | null>, layoutKey: string) {
-  const [trail, setTrail] = useState<{ w: number; h: number; points: [number, number][] }>({ w: 100, h: 100, points: [] });
-  useLayoutEffect(() => {
-    const board = ref.current;
-    if (!board) return;
-    const measure = () => {
-      const points = [...board.querySelectorAll<HTMLElement>(":scope > .cell")].map((cell) => {
-        const a = cell.firstElementChild as HTMLElement | null;
-        const x = cell.offsetLeft + (a ? a.offsetLeft + a.offsetWidth / 2 : cell.offsetWidth / 2);
-        const y = cell.offsetTop + (a ? a.offsetTop + a.offsetHeight / 2 : cell.offsetHeight / 2);
-        return [Math.round(x), Math.round(y)] as [number, number];
-      });
-      setTrail({ w: board.clientWidth || 100, h: board.clientHeight || 100, points });
-    };
-    measure();
-    const ro = new ResizeObserver(measure);
-    ro.observe(board);
-    return () => ro.disconnect();
-  }, [ref, layoutKey]);
-  return trail;
-}
+/** 학습 경로: 10단계 묶음이 아래에서 위로 올라간다. 지금 단계를 끝내야 다음 단계가 열린다. */
+export function PathHome({ path, results, fresh, busy, plan, onOpen, onChest, onNextChapter }: Props) {
+  const { ref, width } = useWidth();
+  const { set, done, steps, chestSlots, claimedChests, chapter, nextLocked } = path;
+  const first = (chapter - 1) * steps; // 이전 묶음까지 끝낸 단계 수
+  const finished = done >= steps;
 
-/** 오늘의 세트 학습 판: 보드게임처럼 줄마다 방향을 바꿔 한 화면에 들어간다. */
-export function PathHome({ set, results, practiced, openedChests, busy, onOpen, onChest, onNewSet }: Props) {
-  const { ref, cols } = useColumns();
-  const isDone = (n: number) => Boolean(results[set.questions[n].number] || practiced[set.questions[n].number]);
-  const doneCount = set.questions.filter((_, n) => isDone(n)).length;
-  const nextIndex = set.questions.findIndex((_, n) => !isDone(n));
-  const allDone = nextIndex === -1;
-
-  const cells: Cell[] = [];
-  set.questions.forEach((_, n) => {
-    cells.push({ kind: "q", index: n });
-    if (CHEST_AFTER.includes(n)) cells.push({ kind: "chest", after: n });
-  });
-  cells.push({ kind: "trophy" });
-
-  const rows = Math.ceil(cells.length / cols);
-  // 뱀 모양 배치: 짝수 줄은 왼→오, 홀수 줄은 오→왼
-  const place = (k: number) => {
-    const row = Math.floor(k / cols);
-    const c = k % cols;
-    return { row, col: row % 2 === 0 ? c : cols - 1 - c };
-  };
-  // 길은 칸 중심이 아니라 실제 동그라미(칸의 첫 요소) 중심을 잇는다.
-  // 칸 안에서 동그라미는 이름표 때문에 위로 올라가 있고, 판에는 위쪽 여백도 있어서
-  // 칸 비율로 계산하면 점선이 동그라미 위로 어긋난다. 등장 애니메이션(transform)에
-  // 흔들리지 않게 offset(레이아웃 위치)으로 잰다.
-  const trail = useTrail(ref, `${cols}:${cells.length}`);
-  // 지나온 길: 마지막으로 끝낸 칸까지 보라색
-  const lastDoneCell = cells.reduce((acc, c, k) => (c.kind === "q" && isDone(c.index) ? k : acc), -1);
-  const points = (upTo: number) =>
-    trail.points
+  const items: Item[] = [];
+  for (let n = 1; n <= steps; n++) {
+    items.push({ kind: "step", n });
+    if (chestSlots.includes(n)) items.push({ kind: "chest", slot: n });
+  }
+  const height = PAD * 2 + (items.length - 1) * ROW;
+  const amp = Math.max(0, Math.min(96, width / 2 - 64));
+  const pos = (k: number) => ({ x: width / 2 + WAVE[k % WAVE.length] * amp, y: height - PAD - k * ROW });
+  const reached = (item: Item) => (item.kind === "step" ? item.n <= done : item.slot <= done);
+  const lastReached = items.reduce((acc, item, k) => (reached(item) ? k : acc), -1);
+  const line = (upTo: number) =>
+    items
       .slice(0, upTo + 1)
-      .map((p) => p.join(","))
+      .map((_, k) => `${pos(k).x},${pos(k).y}`)
       .join(" ");
 
+  // 들어오면 지금 단계로 스크롤(새 묶음이면 첫 단계)
+  const current = useRef<HTMLButtonElement>(null);
+  // 페이지 이동 때 맨 위로 올리는 처리가 먼저 끝난 뒤에 스크롤한다.
+  useEffect(() => {
+    const t = window.setTimeout(() => current.current?.scrollIntoView({ block: "center", behavior: fresh ? "smooth" : "auto" }), 60);
+    return () => window.clearTimeout(t);
+  }, [chapter, done, fresh]);
+
   return (
-    <div className="board-page">
-      <section className="unit-banner">
+    <div className="ladder-page">
+      {fresh && <Confetti />}
+      <section className="unit-banner ladder-banner">
         <div className="unit-text">
-          <p className="unit-kicker">오늘의 세트 · 목표 {set.expectedTargetLevel}</p>
-          <h1>Q2 → Q15 실전 루틴</h1>
+          <p className="unit-kicker">
+            {chapter}번째 묶음 · 목표 {set.expectedTargetLevel}
+          </p>
+          <h1>
+            {first + 1}~{first + steps}단계
+          </h1>
           <div className="unit-progress-row">
             <div className="unit-progress" aria-hidden="true">
-              <span style={{ transform: `scaleX(${doneCount / set.questions.length})` }} />
+              <span style={{ transform: `scaleX(${done / steps})` }} />
             </div>
             <span>
-              {doneCount}/{set.questions.length}
+              {done}/{steps}
             </span>
           </div>
         </div>
-        <div className="unit-side">
-          <div className="unit-talk">
-            <Mascot mood={allDone ? "happy" : doneCount === 0 ? "cheer" : "idle"} size={56} />
-            <p>{allDone ? "완주! 대단해요" : doneCount === 0 ? "연습은 무료! 마음껏 말해요" : `${set.questions.length - doneCount}문항 남았어요`}</p>
-          </div>
-          <button className="btn btn-on-dark" onClick={onNewSet} disabled={busy} aria-label="새 세트 받기, 데일리 토큰 1개">
-            <Icon name="refresh" size={18} /> 새 세트
-            <span className="cost">
-              <Icon name="coin" size={16} />1
-            </span>
-          </button>
+        <div className="unit-talk">
+          <Mascot mood={finished ? "happy" : done === 0 ? "cheer" : "idle"} size={56} />
+          <p>{finished ? "10단계 클리어!" : `지금 ${first + done + 1}단계예요`}</p>
         </div>
       </section>
 
-      <div className="board" ref={ref} style={{ gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))`, gridTemplateRows: `repeat(${rows}, minmax(0, 1fr))`, "--rows": rows, "--cols": cols } as CSSProperties}>
-        <svg className="board-trail" viewBox={`0 0 ${trail.w} ${trail.h}`} aria-hidden="true">
-          <polyline points={points(cells.length - 1)} className="trail-todo" />
-          {lastDoneCell > 0 && <polyline points={points(lastDoneCell)} className="trail-done" />}
+      {finished && (
+        <section className={`ladder-next${nextLocked ? " locked" : ""}`}>
+          {nextLocked ? (
+            <>
+              <Icon name="lock" size={34} />
+              <div>
+                <strong>오늘의 10단계를 모두 끝냈어요!</strong>
+                <p>
+                  {plan === "free" ? "무료 플랜은 하루 10단계까지예요. 내일 새 단계가 열려요." : "오늘 열 수 있는 단계를 모두 열었어요. 내일 다시 만나요."}
+                </p>
+              </div>
+              {plan === "free" && (
+                <Link to="/membership" className="btn btn-primary">
+                  계속하기
+                </Link>
+              )}
+            </>
+          ) : (
+            <>
+              <Icon name="sparkle" size={34} />
+              <div>
+                <strong>다음 10단계가 기다려요</strong>
+                <p>새 문제는 AI가 바로 만들어 줘요.</p>
+              </div>
+              <button className="btn btn-primary" disabled={busy} onClick={onNextChapter}>
+                {busy ? "만드는 중…" : "새 단계 열기"}
+              </button>
+            </>
+          )}
+        </section>
+      )}
+
+      <div className={`ladder${fresh ? " fresh" : ""}`} ref={ref} style={{ height }}>
+        <svg className="ladder-trail" width={width} height={height} aria-hidden="true">
+          <polyline points={line(items.length - 1)} className="trail-todo" />
+          {lastReached > 0 && <polyline points={line(lastReached)} className="trail-done" />}
         </svg>
 
-        {cells.map((cell, k) => {
-          const { row, col } = place(k);
-          const style = { gridRow: row + 1, gridColumn: col + 1, animationDelay: `${k * 35}ms` };
+        {items.map((item, k) => {
+          const { x, y } = pos(k);
+          const style = { left: x, top: y, animationDelay: fresh ? `${k * 90}ms` : undefined };
 
-          if (cell.kind === "trophy")
+          if (item.kind === "chest") {
+            const ready = done >= item.slot;
+            const opened = claimedChests.includes(item.slot);
             return (
-              <div key="trophy" className="cell" style={style}>
-                <span className={`trophy${allDone ? " earned" : ""}`} aria-label={allDone ? "완주" : "완주 보상"}>
-                  <Icon name="trophy" size={56} />
-                </span>
-                <span className="node-label">{allDone ? "완주!" : "완주"}</span>
-              </div>
-            );
-
-          if (cell.kind === "chest") {
-            const ready = set.questions.slice(0, cell.after + 1).every((_, n) => isDone(n));
-            const opened = openedChests.includes(cell.after);
-            return (
-              <div key={`chest-${cell.after}`} className="cell" style={style}>
+              <div key={`chest-${item.slot}`} className="rung" style={style}>
                 <button
                   className={`chest${ready ? " ready" : ""}${opened ? " opened" : ""}`}
-                  disabled={!ready || opened}
-                  onClick={() => onChest(cell.after)}
+                  disabled={!ready || opened || busy}
+                  onClick={() => onChest(item.slot)}
                   aria-label={opened ? "열린 보물상자" : ready ? "보물상자 열기" : "잠긴 보물상자"}
                 >
-                  <Icon name={opened ? "sparkle" : "chest"} size={48} />
+                  <Icon name={opened ? "sparkle" : "chest"} size={44} />
                 </button>
-                <span className="node-label">{opened ? "+15 XP" : ready ? "열기!" : "보물상자"}</span>
+                <span className="node-label">{opened ? "열었어요" : ready ? "열기!" : "보물상자"}</span>
               </div>
             );
           }
 
-          const q = set.questions[cell.index];
+          const index = item.n - 1;
+          const q = set.questions[index];
           const ai = results[q.number];
-          const pr = practiced[q.number];
-          const current = cell.index === nextIndex;
+          const isDone = item.n <= done;
+          const isCurrent = item.n === done + 1;
+          const locked = item.n > done + 1;
           const section = SECTION[q.examSection] ?? SECTION.practice;
           return (
-            <div key={q.number} className="cell" style={style}>
+            <div key={q.number} className="rung" style={style}>
               <button
-                className={`node${ai ? " ai" : pr ? " practiced" : ""}${current ? " current" : ""}`}
+                ref={isCurrent ? current : undefined}
+                className={`node${isDone ? " ai" : ""}${isCurrent ? " current" : ""}${locked ? " locked" : ""}`}
+                disabled={locked}
                 onClick={() => {
                   play("select", { volume: 0.5 });
-                  onOpen(cell.index);
+                  onOpen(index);
                 }}
-                aria-label={`Q${q.number} ${section.label}${ai ? ` AI ${ai.predictedLevel}` : pr ? " 연습 완료" : ""}`}
+                aria-label={`${first + item.n}단계 ${section.label}${isDone ? " 완료" : locked ? " 잠김" : ""}`}
               >
-                {ai || pr ? <Icon name="check" size={30} className="node-check" /> : <Icon name={section.icon} size={30} />}
+                {isDone ? <Icon name="check" size={30} className="node-check" /> : <Icon name={locked ? "lock" : section.icon} size={28} />}
                 {ai && <span className="node-badge">{ai.predictedLevel}</span>}
-                {current && <span className="node-start">시작</span>}
+                {isCurrent && <span className="node-start">시작</span>}
               </button>
               <span className="node-label">
-                Q{q.number}
-                {!ai && pr && (
-                  <span className="node-stars" aria-label={`별 ${pr.stars}개`}>
-                    {[0, 1, 2].map((s) => (
-                      <i key={s} className={s < pr.stars ? "on" : undefined} />
-                    ))}
-                  </span>
-                )}
-                {!pr && !ai && <small>{section.label}</small>}
+                {first + item.n}단계
+                {!isDone && <small>{section.label}</small>}
               </span>
             </div>
           );
         })}
       </div>
+
+      {chapter > 1 && (
+        <p className="ladder-past">
+          <Icon name="check" size={16} /> 지난 {first}단계 완료
+        </p>
+      )}
     </div>
   );
 }

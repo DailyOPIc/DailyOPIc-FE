@@ -8,7 +8,7 @@ import { play } from "./sfx";
 /** 받은 토큰 알림(TokenToast가 띄운다). detail = 어디서 받았는지 */
 export const TOKEN_EVENT = "dailyopic:token";
 
-function announce(label: string) {
+export function announce(label: string) {
   play("coin");
   window.dispatchEvent(new CustomEvent(TOKEN_EVENT, { detail: label }));
   window.dispatchEvent(new Event(REFRESH_EVENT)); // 상단 토큰 수 다시 읽기

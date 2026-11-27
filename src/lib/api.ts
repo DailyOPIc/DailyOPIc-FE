@@ -43,7 +43,41 @@ export type Usage = {
   mockAvailable?: boolean | null;
   mockRemaining?: number | null;
   mockSessionStage?: MockStage | null;
+  /** 광고 보고 토큰 받기(무료 앱): 오늘 본 횟수 / 하루 최대 */
+  adRewardsUsed?: number;
+  adRewardsMax?: number;
+  /** 오픽게임 게임별 오늘 플레이 수 · 하루 한도 */
+  gamePlays?: Record<string, number>;
+  gamePlaysLimit?: number;
 };
+
+/** 학습 경로: 10단계 묶음 하나. 지금 단계(done+1)를 AI 분석까지 끝내야 다음이 열린다. */
+export type PathState = {
+  chapter: number;
+  set: QuestionSet;
+  done: number;
+  steps: number;
+  chestSlots: number[];
+  claimedChests: number[];
+  /** 오늘 새 묶음 한도에 걸림(무료: 하루 10단계) */
+  nextLocked: boolean;
+};
+
+export type LevelProgress = { level: number; xp: number; levelXp: number; levelNeed: number };
+
+export type Profile = {
+  nickname: string | null;
+  progress: LevelProgress;
+  streak: number;
+  bestStreak: number;
+  todayCount: number;
+  todayXp: number;
+  dailyGoal: number;
+};
+
+export type ActivityDay = { date: string; total: number; xp: number; counts: Record<string, number> };
+
+export type XpGain = { gained: number; progress: LevelProgress; leveledUp: boolean; streak: number };
 
 export type MockStage =
   | "awaiting_start_ad"
@@ -220,6 +254,22 @@ export const api = {
     request<WebOrder>("/v1/web-payments/orders", { method: "POST", json: { productId } }),
   confirmPayment: (body: { paymentKey: string; orderId: string; amount: number }) =>
     request<Wallet>("/v1/web-payments/confirm", { method: "POST", json: body }),
+  path: (body: { initialLevel: number; survey: Survey }) =>
+    request<PathState>("/v1/path", { method: "POST", json: { ...body, background: {} } }),
+  nextChapter: (body: { initialLevel: number; survey: Survey }) =>
+    request<PathState>("/v1/path/next-chapter", { method: "POST", json: { ...body, background: {} } }),
+  openChest: (slot: number) =>
+    request<{ opened: boolean; tokenGranted: boolean; bonusRemaining: number; xp: XpGain | null }>(`/v1/path/chests/${slot}`, { method: "POST" }),
+  profile: () => request<Profile>("/v1/me/profile"),
+  setNickname: (nickname: string) => request<Profile>("/v1/me/nickname", { method: "PUT", json: { nickname } }),
+  activity: (days = 140) => request<{ days: ActivityDay[] }>(`/v1/me/activity?days=${days}`),
+  importProgress: (body: { xp: number; streak: number; bestStreak: number; lastDay: string | null }) =>
+    request<Profile>("/v1/me/progress/import", { method: "POST", json: body }),
+  /** 게임 한 판 시작(게임마다 하루 5판). setIndex = 이번 판에 쓸 오늘의 세트 */
+  gamePlay: (game: string) =>
+    request<{ game: string; used: number; limit: number; setIndex: number }>("/v1/games/plays", { method: "POST", json: { game } }),
+  gameFinish: (game: string, correct: number) =>
+    request<XpGain>("/v1/games/plays/finish", { method: "POST", json: { game, correct } }),
   practiceSet: (body: { initialLevel: number; survey: Survey }, key: string) =>
     request<QuestionSet>("/v1/question-sets/practice", {
       method: "POST",
