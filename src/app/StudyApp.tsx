@@ -3,7 +3,7 @@ import { Navigate, useLocation } from "react-router-dom";
 import { Mascot } from "../assets/Mascot";
 import { api, type ApiError, type Evaluation, type LevelProgress, type PathState, type Profile, type Usage } from "../lib/api";
 import { useAuth } from "../lib/auth";
-import { loadGame, recordActivity, type GameState, type Recorded } from "../lib/game";
+import { loadGame, type GameState } from "../lib/game";
 import { diffProfiles, importLegacyOnce, toGameState, type Gain } from "../lib/progress";
 import { REFRESH_EVENT } from "../lib/native";
 import { announce, claimActivityToken } from "../lib/tokens";
@@ -15,7 +15,6 @@ import { Lesson } from "./Lesson";
 import { MockExam } from "./MockExam";
 import { Onboarding } from "./Onboarding";
 import { PathHome } from "./PathHome";
-import { RandomSpeak } from "./RandomSpeak";
 import { WordGames } from "./WordGames";
 import "./app.css";
 
@@ -49,7 +48,7 @@ export function StudyApp() {
 
 function Study({ uid }: { uid: string }) {
   const { pathname } = useLocation();
-  const view = (["speak", "words", "mock", "me", "activity"] as const).find((v) => pathname.startsWith(`/study/${v}`)) ?? "path";
+  const view = (["words", "mock", "me", "activity"] as const).find((v) => pathname.startsWith(`/study/${v}`)) ?? "path";
   const [prefs, setPrefs] = useState<StudyPrefs | null>(() => loadPrefs(uid));
   const [editing, setEditing] = useState(false);
   const [path, setPath] = useState<PathState | null>(null);
@@ -63,8 +62,6 @@ function Study({ uid }: { uid: string }) {
   const [level, setLevel] = useState<LevelProgress | null>(null);
   const [lesson, setLesson] = useState<number | null>(null);
   const [busy, setBusy] = useState(false);
-  const [, setLimitTick] = useState(0);
-  const onLimitUse = useCallback(() => setLimitTick((t) => t + 1), []);
   const [error, setError] = useState<string | null>(null);
 
   const tokens = usage ? usage.freeRemaining + usage.bonusRemaining + (usage.purchasedTokens ?? 0) : null;
@@ -83,17 +80,6 @@ function Study({ uid }: { uid: string }) {
       return null;
     }
   }, []);
-  // 아직 서버로 옮기지 않은 활동(오픽게임)은 예전처럼 기기에 기록한다.
-  // ponytail: 오픽게임이 /v1/games/plays/finish 로 옮겨 가면 지운다(단계 7).
-  const reward = useCallback(
-    (xp: number): Recorded => {
-      const r = recordActivity(uid, xp);
-      setGame(r.state);
-      return r;
-    },
-    [uid],
-  );
-
   useEffect(() => {
     void importLegacyOnce(uid).finally(() => void syncProgress());
   }, [uid, syncProgress]);
@@ -231,10 +217,10 @@ function Study({ uid }: { uid: string }) {
 
   let content: ReactNode;
   let loading = false;
-  if (view === "speak" && prefs) content = <RandomSpeak uid={uid} plan={plan} prefs={prefs} onReward={reward} onLimitUse={onLimitUse} />;
-  else if (view === "mock" && prefs) content = <MockExam prefs={prefs} usage={usage} onChanged={() => void refreshUsage()} onReward={() => void syncProgress()} />;
+  if (view === "mock" && prefs) content = <MockExam prefs={prefs} usage={usage} onChanged={() => void refreshUsage()} onReward={() => void syncProgress()} />;
   else if (view === "me" || view === "activity") content = <MyPage onChanged={() => void syncProgress()} />;
-  else if (view === "words") content = <WordGames uid={uid} plan={plan} onReward={reward} onLimitUse={onLimitUse} />;
+  else if (view === "words")
+    content = <WordGames plays={usage?.gamePlays ?? {}} limit={usage?.gamePlaysLimit ?? 5} onReward={syncProgress} onPlayed={() => void refreshUsage()} />;
   else if (path)
     content = (
       <PathHome

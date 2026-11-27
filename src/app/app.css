@@ -1576,9 +1576,7 @@
   color: var(--primary);
   font-size: 18px;
 }
-.mic-white {
-  filter: brightness(0) invert(1);
-}
+
 .rec-dot {
   display: inline-block;
   width: 10px;
@@ -1767,104 +1765,24 @@
 .mode-hero .eyebrow {
   margin: 0 0 4px;
 }
-.dice-card {
-  display: grid;
-  justify-items: center;
-  gap: 8px;
-  width: 100%;
-  margin-top: 32px;
-  padding: 40px 20px;
-  border: 0;
-  border-radius: 28px;
-  background: linear-gradient(160deg, #6a48ff, var(--primary));
-  color: #fff;
-  box-shadow: 0 8px 0 var(--primary-deep);
-  font: inherit;
-  cursor: pointer;
-  transition: transform 0.1s ease;
-}
-@media (hover: hover) {
-  .dice-card:hover .dice-spin {
-  animation: dice-roll 0.6s ease-in-out;
-}
-}
-.dice-card:active {
-  transform: translateY(8px);
-  box-shadow: none;
-}
-.dice-card strong {
-  font-size: 26px;
-  font-weight: 900;
-}
-.dice-card span {
-  opacity: 0.85;
-  font-weight: 700;
-}
-.dice-spin {
-  filter: drop-shadow(0 6px 0 rgba(0, 0, 0, 0.15));
-}
+
+
+
+
+
 @keyframes dice-roll {
   0% { transform: rotate(0) scale(1); }
   40% { transform: rotate(200deg) scale(1.15); }
   100% { transform: rotate(360deg) scale(1); }
 }
-.mode-top {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-}
-.pill-count {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 8px 14px;
-  border-radius: 999px;
-  background: var(--primary-soft);
-  color: var(--primary);
-  font-weight: 800;
-}
-.flip-card {
-  position: relative;
-  margin-top: 20px;
-  padding: 28px 24px 28px;
-  border-radius: 24px;
-  background: #fff;
-  border: 2px solid var(--line);
-  box-shadow: 0 6px 0 var(--line);
-  animation: card-flip 0.5s var(--ease-out);
-  min-height: 150px;
-}
-.flip-card.rolling {
-  animation: card-shake 0.18s linear infinite;
-  border-color: #cfc3ff;
-}
-.flip-tag {
-  display: inline-block;
-  padding: 3px 12px;
-  border-radius: 999px;
-  background: var(--primary);
-  color: #fff;
-  font-weight: 800;
-  font-size: 13px;
-}
-.flip-text {
-  margin: 12px 0 0;
-  padding-right: 56px;
-  font-size: clamp(20px, 2.4vw, 26px);
-  font-weight: 800;
-  line-height: 1.4;
-}
-.flip-text.blur {
-  filter: blur(2px);
-  opacity: 0.6;
-  padding-right: 0;
-}
-.flip-card .speak-btn.small {
-  position: absolute;
-  right: 20px;
-  top: 20px;
-}
+
+
+
+
+
+
+
+
 @keyframes card-flip {
   0% { transform: perspective(700px) rotateX(-70deg); opacity: 0; }
   100% { transform: none; opacity: 1; }
@@ -1874,9 +1792,7 @@
   25% { transform: translateX(-3px) rotate(-0.6deg); }
   75% { transform: translateX(3px) rotate(0.6deg); }
 }
-.checked-area .transcript-card {
-  margin-top: 20px;
-}
+
 .row-actions {
   display: flex;
   flex-wrap: wrap;
@@ -2811,10 +2727,7 @@
   .expr-list {
     grid-template-columns: 1fr;
   }
-  .dice-card {
-    margin-top: 20px;
-    padding: 28px 16px;
-  }
+
 }
 
 /* 탭할 수 있는 최소 크기(46px). 이보다 작아져야 하면 판을 스크롤한다. */
@@ -3427,46 +3340,13 @@
 .limit-page .row-actions {
   width: 100%;
 }
-.side-card.limits {
-  display: grid;
-  gap: 10px;
-}
-.limit-row {
-  display: grid;
-  grid-template-columns: 84px 1fr 36px;
-  align-items: center;
-  gap: 8px;
-  font-size: 13px;
-  font-weight: 700;
-  color: var(--ink-2);
-}
-.limit-row b {
-  text-align: right;
-  color: var(--ink);
-  font-variant-numeric: tabular-nums;
-}
-.limit-track {
-  height: 10px;
-  border-radius: 999px;
-  background: var(--surface);
-  overflow: hidden;
-}
-.limit-track span {
-  display: block;
-  height: 100%;
-  width: 100%;
-  border-radius: inherit;
-  background: var(--primary);
-  transform-origin: left;
-  transition: transform 0.4s var(--ease-out);
-}
-.limit-track span.full {
-  background: #c9c4dc;
-}
-.side-card.limits p {
-  margin: 0;
-  font-size: 12px;
-}
+
+
+
+
+
+
+
 
 /* 판 위쪽 여백: '시작' 태그 · 진행 링 · 등급 배지가 배너 밑으로 들어가지 않게 */
 .board {
@@ -4422,4 +4302,12 @@ button.stat-chip {
     width: 30px;
     height: 30px;
   }
+}
+
+/* 오픽게임: 오늘 다 한 게임 */
+.mode-card.spent {
+  opacity: 0.55;
+}
+.mode-card:disabled {
+  cursor: progress;
 }

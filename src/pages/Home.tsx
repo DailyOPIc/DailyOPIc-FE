@@ -3,7 +3,6 @@ import { Link } from "react-router-dom";
 import { AppStoreButton, Marquee } from "../components/Bits";
 import { AnalysisDemo, BoardDemo, CountUp, GamesDemo, LogoBuild, QuestionDemo, VersusDemo, VoicePill } from "../components/Demos";
 import { Icon, type IconName } from "../assets/Icon";
-import { FREE_DAILY } from "../lib/limits";
 import { REVIEWS, type Review } from "../site";
 
 const GRADES = ["NL", "NM", "NH", "IL", "IM1", "IM2", "IM3", "IH", "AL"];
@@ -222,7 +221,7 @@ export function Home() {
 
       <Feature
         reverse
-        eyebrow="04 · 단어 게임 7종"
+        eyebrow="04 · 오픽게임 7종"
         title="답변에 바로 쓰는 표현을 놀이로"
         points={[
           {
@@ -296,8 +295,8 @@ export function Home() {
               <Icon name="mic" size={44} />
               <strong>언제나 무료</strong>
               <ul>
-                <li>오늘의 세트 Q2~Q15 말하기 연습</li>
-                <li>말하자마자 별 3개 간단 체크</li>
+                <li>학습 단계 하루 10단계</li>
+                <li>보물상자 · 하루 목표로 토큰 추가</li>
                 <li>친구가 보낸 도전장 대결</li>
               </ul>
             </div>
@@ -305,16 +304,16 @@ export function Home() {
               <Icon name="dice" size={44} />
               <strong>매일 무료</strong>
               <ul>
-                <li>랜덤 스피킹 하루 {FREE_DAILY.speak}문제</li>
-                <li>단어 게임 하루 {FREE_DAILY.games}판</li>
-                <li>AI 정밀 분석 데일리 토큰 1개</li>
+                <li>오픽게임 게임마다 하루 5판</li>
+                <li>AI 분석 데일리 토큰 1개</li>
+                <li>레벨 · 연속 학습 기록</li>
               </ul>
             </div>
             <div className="free-card plus" data-reveal style={{ "--reveal-delay": "200ms" } as CSSProperties}>
               <Icon name="gem" size={44} />
               <strong>베이직부터</strong>
               <ul>
-                <li>랜덤 스피킹 · 단어 게임 무제한</li>
+                <li>학습 단계 제한 없이 이어서</li>
                 <li>AI 분석 토큰 매일 3~20개</li>
                 <li>교정 · 모범 답안까지 결과 전체</li>
               </ul>

@@ -12,7 +12,6 @@ import { DAILY_GOAL, type GameState } from "../lib/game";
 import { levelFromXp } from "../lib/level";
 import { LEVEL_UP_EVENT } from "../lib/progress";
 import { Confetti } from "./Reward";
-import { FREE_DAILY, LIMIT_LABEL, used, type LimitKind } from "../lib/limits";
 import { isMuted, play, setMuted } from "../lib/sfx";
 
 type Props = {
@@ -36,7 +35,6 @@ const NAV: { to: string; label: string; tab?: string; icon: IconName; end?: bool
   { to: "/study/mock", label: "모의고사", tab: "모의고사", icon: "clipboard" },
   { to: "/study/words", label: "오픽게임", tab: "오픽게임", icon: "keyboard" },
   { to: "/study/me", label: "마이", tab: "마이", icon: "star" },
-  { to: "/study/speak", label: "랜덤 스피킹", icon: "dice" },
 ];
 
 /** 서비스 화면 틀: 사이트 헤더 · 푸터 없이 왼쪽 레일 + 가운데 학습 + 오른쪽 현황 */
@@ -147,7 +145,6 @@ export function AppShell({ uid, game, tokens, level, ads, plan, coachReady, onEd
       <aside className="side">
         {stats()}
         <GoalCard game={game} />
-        {plan === "free" && <FreeLimits uid={uid} />}
         {plan === "free" && (
           <div className="side-card upsell">
             <Mascot mood="cheer" size={64} />
@@ -287,26 +284,3 @@ export function GoalCard({ game }: { game: GameState }) {
   );
 }
 
-function FreeLimits({ uid }: { uid: string }) {
-  const kinds: LimitKind[] = ["speak", "games"];
-  return (
-    <div className="side-card limits">
-      <strong>오늘의 무료 이용</strong>
-      {kinds.map((k) => {
-        const u = Math.min(used(uid, k), FREE_DAILY[k]);
-        return (
-          <div key={k} className="limit-row">
-            <span>{LIMIT_LABEL[k]}</span>
-            <span className="limit-track">
-              <span style={{ transform: `scaleX(${u / FREE_DAILY[k]})` }} className={u >= FREE_DAILY[k] ? "full" : undefined} />
-            </span>
-            <b>
-              {FREE_DAILY[k] - u}/{FREE_DAILY[k]}
-            </b>
-          </div>
-        );
-      })}
-      <p>매일 자정에 다시 채워져요</p>
-    </div>
-  );
-}

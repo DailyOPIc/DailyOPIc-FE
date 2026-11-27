@@ -8,7 +8,6 @@ import { Lesson } from "./Lesson";
 import { MockExam, type Phase } from "./MockExam";
 import { Onboarding } from "./Onboarding";
 import { PathHome } from "./PathHome";
-import { RandomSpeak } from "./RandomSpeak";
 import { WordGames } from "./WordGames";
 import "./app.css";
 
@@ -101,9 +100,7 @@ export function DevPreview() {
           }}
         />
       ) : view === "words" ? (
-        <WordGames uid="dev" plan={new URLSearchParams(window.location.search).get("plan") ?? "free"} onReward={() => REWARD} onLimitUse={() => {}} />
-      ) : view === "speak" ? (
-        <RandomSpeak uid="dev" plan={new URLSearchParams(window.location.search).get("plan") ?? "free"} prefs={{ initialLevel: 5, survey: { status: "student", residence: "family", leisure: ["movies", "cafes"], hobbies: [], sports: ["jogging"], travel: [] } }} onReward={() => REWARD} onLimitUse={() => {}} />
+        <WordGames plays={{ speed: 2, typing: 5 }} limit={5} onReward={async () => REWARD} onPlayed={() => {}} />
       ) : (
         <PathHome
           path={{
