@@ -35,7 +35,7 @@ const NAV: { to: string; label: string; tab?: string; icon: IconName; end?: bool
   { to: "/study", label: "오늘의 학습", tab: "학습", icon: "mic", end: true },
   { to: "/study/mock", label: "모의고사", tab: "모의고사", icon: "clipboard" },
   { to: "/study/words", label: "오픽게임", tab: "오픽게임", icon: "keyboard" },
-  { to: "/study/activity", label: "활동", tab: "활동", icon: "flame" },
+  { to: "/study/me", label: "마이", tab: "마이", icon: "star" },
   { to: "/study/speak", label: "랜덤 스피킹", icon: "dice" },
 ];
 

@@ -3,7 +3,7 @@ import { useState } from "react";
 import type { Evaluation, QuestionSet } from "../lib/api";
 import type { GameState, Recorded } from "../lib/game";
 import { AppShell } from "./AppShell";
-import { Activity } from "./Activity";
+import { MyPage } from "./MyPage";
 import { Lesson } from "./Lesson";
 import { MockExam, type Phase } from "./MockExam";
 import { Onboarding } from "./Onboarding";
@@ -53,11 +53,6 @@ const MOCK_RESULT = {
   overallFeedback: "질문 의도에 맞게 답했고 문장도 안정적이에요. 답변 길이를 늘리면 한 단계 올라갈 수 있어요.",
   perQuestion: [], // 서버 모의고사 채점은 문항별 피드백을 만들지 않는다(실제와 같게)
 };
-function seedActivity() {
-  const log: Record<string, number> = {};
-  for (let i = 0; i < 110; i++) if (i % 3) log[new Date(Date.now() + 9 * 3600e3 - i * 86400e3).toISOString().slice(0, 10)] = (i * 7) % 6;
-  localStorage.setItem("dailyopic:activity:dev", JSON.stringify(log));
-}
 
 export function DevPreview() {
   const params = new URLSearchParams(window.location.search);
@@ -95,7 +90,16 @@ export function DevPreview() {
           dev={{ phase: (new URLSearchParams(window.location.search).get("phase") ?? "intro") as Phase, session: MOCK_SESSION, result: MOCK_RESULT }}
         />
       ) : view === "activity" ? (
-        (seedActivity(), <Activity uid="dev" game={GAME} />)
+        <MyPage
+          onChanged={() => {}}
+          dev={{
+            profile: { nickname: params.get("nick") ?? "오픽왕", progress: { level: 7, xp: 2140, levelXp: 380, levelNeed: 836 }, streak: 4, bestStreak: 9, todayCount: 2, todayXp: 35, dailyGoal: 3 },
+            days: Array.from({ length: 60 }, (_, i) => {
+              const d = new Date(Date.now() + 9 * 3600e3 - i * 86400e3).toISOString().slice(0, 10).replaceAll("-", "");
+              return { date: d, total: i % 4 ? (i * 7) % 9 : 0, xp: ((i * 13) % 90) + 10, counts: { step: (i * 3) % 5, game: i % 3, chest: i % 2, ...(i % 5 === 0 ? { mock: 1, goal: 1 } : {}) } };
+            }),
+          }}
+        />
       ) : view === "words" ? (
         <WordGames uid="dev" plan={new URLSearchParams(window.location.search).get("plan") ?? "free"} onReward={() => REWARD} onLimitUse={() => {}} />
       ) : view === "speak" ? (

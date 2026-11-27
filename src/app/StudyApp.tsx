@@ -10,7 +10,7 @@ import { announce, claimActivityToken } from "../lib/tokens";
 import { loadPrefs, savePrefs, type StudyPrefs } from "../lib/prefs";
 import { play, warmUp } from "../lib/sfx";
 import { AppShell } from "./AppShell";
-import { Activity } from "./Activity";
+import { MyPage } from "./MyPage";
 import { Lesson } from "./Lesson";
 import { MockExam } from "./MockExam";
 import { Onboarding } from "./Onboarding";
@@ -49,7 +49,7 @@ export function StudyApp() {
 
 function Study({ uid }: { uid: string }) {
   const { pathname } = useLocation();
-  const view = (["speak", "words", "mock", "activity"] as const).find((v) => pathname.startsWith(`/study/${v}`)) ?? "path";
+  const view = (["speak", "words", "mock", "me", "activity"] as const).find((v) => pathname.startsWith(`/study/${v}`)) ?? "path";
   const [prefs, setPrefs] = useState<StudyPrefs | null>(() => loadPrefs(uid));
   const [editing, setEditing] = useState(false);
   const [path, setPath] = useState<PathState | null>(null);
@@ -146,7 +146,7 @@ function Study({ uid }: { uid: string }) {
 
   // 단어 게임은 단계 · 설문이 필요 없다(도전장으로 처음 온 사람도 바로 대결)
   // 오픽게임 · 활동은 설문 없이도 열린다
-  if ((!prefs && view !== "words" && view !== "activity") || editing)
+  if ((!prefs && view !== "words" && view !== "activity" && view !== "me") || editing)
     return (
       <Onboarding
         initial={prefs}
@@ -233,7 +233,7 @@ function Study({ uid }: { uid: string }) {
   let loading = false;
   if (view === "speak" && prefs) content = <RandomSpeak uid={uid} plan={plan} prefs={prefs} onReward={reward} onLimitUse={onLimitUse} />;
   else if (view === "mock" && prefs) content = <MockExam prefs={prefs} usage={usage} onChanged={() => void refreshUsage()} onReward={() => void syncProgress()} />;
-  else if (view === "activity") content = <Activity uid={uid} game={game} />;
+  else if (view === "me" || view === "activity") content = <MyPage onChanged={() => void syncProgress()} />;
   else if (view === "words") content = <WordGames uid={uid} plan={plan} onReward={reward} onLimitUse={onLimitUse} />;
   else if (path)
     content = (

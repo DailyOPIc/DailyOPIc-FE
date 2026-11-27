@@ -4183,3 +4183,243 @@ button.stat-chip {
 @keyframes levelup-pop {
   from { opacity: 0; transform: translateX(-50%) scale(0.4); }
 }
+
+/* ═════════ 마이 ═════════ */
+.my-page {
+  display: grid;
+  gap: 16px;
+}
+.my-head {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+.my-name {
+  flex: 1;
+  min-width: 0;
+}
+.my-name h1 {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin: 0;
+  font-size: 24px;
+  font-weight: 900;
+  overflow-wrap: anywhere;
+}
+.nick-edit {
+  flex-shrink: 0;
+}
+.nick-form {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.nick-form input {
+  flex: 1 1 140px;
+  min-width: 0;
+  height: 44px;
+  padding: 0 12px;
+  border: 2px solid var(--line);
+  border-radius: 12px;
+  font: inherit;
+  font-size: 16px;
+  font-weight: 800;
+}
+.nick-form input:focus {
+  outline: none;
+  border-color: var(--primary);
+}
+.nick-error {
+  margin: 6px 0 0;
+  color: var(--danger, #ef4444);
+  font-size: 13px;
+  font-weight: 700;
+}
+.my-sub {
+  margin: 4px 0 0;
+  color: var(--ink-2);
+  font-size: 14px;
+  font-weight: 700;
+}
+.my-level {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 16px 18px;
+  border-radius: 20px;
+  background: var(--primary);
+  color: #fff;
+  box-shadow: 0 6px 0 var(--primary-deep);
+}
+.my-level-badge {
+  display: grid;
+  justify-items: center;
+  flex-shrink: 0;
+  width: 72px;
+  padding: 8px 0;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.16);
+}
+.my-level-badge small {
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 0.16em;
+  color: #ffd66b;
+}
+.my-level-badge b {
+  font-size: 30px;
+  font-weight: 900;
+  line-height: 1.1;
+}
+.my-level-bar {
+  flex: 1;
+  min-width: 0;
+}
+.xp-track {
+  height: 14px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.22);
+  overflow: hidden;
+}
+.xp-track span {
+  display: block;
+  height: 100%;
+  background: var(--gold);
+  transform-origin: left;
+  transition: transform 0.8s var(--ease-out);
+}
+.my-level-bar p {
+  margin: 8px 0 0;
+  font-size: 13px;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.85);
+}
+.my-level-bar p b {
+  color: #fff;
+}
+.my-streak {
+  padding: 18px;
+  border-radius: 20px;
+  border: 2px solid var(--line);
+}
+.streak-big {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: #c7c3d6;
+}
+.my-streak.lit .streak-big {
+  color: #f97316;
+}
+.streak-big b {
+  display: block;
+  font-size: 30px;
+  font-weight: 900;
+  color: var(--ink);
+}
+.my-streak.lit .streak-big b {
+  color: #ea580c;
+}
+.streak-big span {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--ink-2);
+}
+.week-dots {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 6px;
+  margin: 16px 0 0;
+  padding: 0;
+  list-style: none;
+}
+.week-dots li {
+  display: grid;
+  justify-items: center;
+  gap: 4px;
+  font-size: 12px;
+  font-weight: 800;
+  color: var(--ink-2);
+}
+.week-dots li span {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: var(--line);
+  color: #fff;
+}
+.week-dots li.on span {
+  background: #f97316;
+  box-shadow: 0 3px 0 #c2410c;
+}
+.week-dots li.today span {
+  outline: 3px solid #fed7aa;
+  outline-offset: 2px;
+}
+.week-dots li.future span {
+  opacity: 0.4;
+}
+.streak-goal {
+  margin: 14px 0 0;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--ink-2);
+}
+.my-calendar .hm {
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+}
+.my-calendar .hm.sel {
+  outline: 2px solid var(--ink);
+  outline-offset: 1px;
+}
+.day-summary {
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 2px solid var(--line);
+}
+.day-summary ul {
+  display: grid;
+  gap: 8px;
+  margin: 10px 0 0;
+  padding: 0;
+  list-style: none;
+}
+.day-summary li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 700;
+}
+.day-summary li b {
+  margin-left: auto;
+  color: var(--primary);
+}
+.day-xp {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin: 12px 0 0;
+  color: var(--gold-deep);
+  font-weight: 900;
+}
+.day-empty {
+  margin: 8px 0 0;
+  color: var(--ink-2);
+}
+@media (max-width: 760px) {
+  .my-name h1 {
+    font-size: 20px;
+  }
+  .my-level-badge {
+    width: 60px;
+  }
+  .week-dots li span {
+    width: 30px;
+    height: 30px;
+  }
+}

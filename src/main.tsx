@@ -51,8 +51,9 @@ const PAGES: Record<string, { title: string; description?: string }> = {
   "/terms": { title: `이용약관 · ${BRAND}`, description: "데일리오픽 서비스 이용 조건, 유료 서비스 · 결제, 이용자 의무와 책임을 안내합니다." },
   "/login": { title: `로그인 · ${BRAND}` },
   "/study": { title: `오늘의 학습 · ${BRAND}` },
-  "/study/speak": { title: `랜덤 스피킹 · ${BRAND}` },
-  "/study/words": { title: `단어 게임 · ${BRAND}` },
+  "/study/words": { title: `오픽게임 · ${BRAND}` },
+  "/study/mock": { title: `모의고사 · ${BRAND}` },
+  "/study/me": { title: `마이 · ${BRAND}` },
   "/payments/success": { title: `결제 확인 · ${BRAND}` },
   "/payments/fail": { title: `결제 실패 · ${BRAND}` },
 };
