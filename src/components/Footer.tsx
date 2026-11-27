@@ -27,6 +27,7 @@ export function Footer() {
           <div><dt>상호</dt><dd>{BUSINESS.name}</dd></div>
           <div><dt>대표자</dt><dd>{BUSINESS.owner}</dd></div>
           <div><dt>사업자등록번호</dt><dd>{BUSINESS.registration}</dd></div>
+          <div><dt>통신판매업신고</dt><dd>{BUSINESS.mailOrder}</dd></div>
           <div><dt>사업장 주소</dt><dd>{BUSINESS.address}</dd></div>
           {BUSINESS.phone && <div><dt>대표전화</dt><dd><a href={`tel:${BUSINESS.phone}`}>{BUSINESS.phone}</a></dd></div>}
           <div><dt>이메일</dt><dd><a href={`mailto:${BUSINESS.email}`}>{BUSINESS.email}</a></dd></div>
